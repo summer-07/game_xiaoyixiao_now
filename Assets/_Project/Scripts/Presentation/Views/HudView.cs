@@ -25,6 +25,10 @@ namespace SheepStrike.Presentation.Views
         public static readonly Vector2 GearPosition = new Vector2(70f, -75f);
         private const float ToastSeconds = 1.6f;
         private const float ToastFadeSeconds = 0.4f;
+        private const float ToastPadding = 56f;
+        private const float ToastMinWidth = 240f;
+        private const float ToastMaxWidth = 1000f;
+        private const float EntranceStagger = 0.06f;
         private const int ComboVisibleFrom = 3;
         private const float ComboPunch = 0.22f;
         private const float ComboGrowthPerTier = 0.1f;
@@ -106,14 +110,27 @@ namespace SheepStrike.Presentation.Views
         }
 
         /// <summary>Hides the level HUD (top bar, pen, queue, boosters) behind the home screen; toasts still show.</summary>
+        /// <remarks>
+        /// Coming back, the parts arrive in turn: top bar from above, gear and timer from the left,
+        /// then booster bar, queue and pen rising from below. Leaving is instant because the home screen takes over.
+        /// </remarks>
         public void SetGameplayVisible(bool visible)
         {
-            _topBar.gameObject.SetActive(visible);
-            _settingsButton.SetActive(visible);
-            _timerGroup.SetActive(visible);
-            Slots.Root.gameObject.SetActive(visible);
-            Queue.Root.gameObject.SetActive(visible);
-            Boosters.Root.gameObject.SetActive(visible);
+            var parts = new (Component Part, UiTransition.Motion Motion)[]
+            {
+                (_topBar, UiTransition.Motion.FromTop),
+                (_settingsButton.transform, UiTransition.Motion.FromLeft),
+                (_timerGroup.transform, UiTransition.Motion.FromLeft),
+                (Boosters.Root, UiTransition.Motion.FromBottom),
+                (Queue.Root, UiTransition.Motion.FromBottom),
+                (Slots.Root, UiTransition.Motion.FromBottom)
+            };
+            for (int i = 0; i < parts.Length; i++)
+            {
+                var transition = UiTransition.On(parts[i].Part, parts[i].Motion, i * EntranceStagger);
+                if (visible) transition.Show();
+                else transition.HideImmediately();
+            }
             if (!visible) _combo.gameObject.SetActive(false);
         }
 
@@ -154,6 +171,8 @@ namespace SheepStrike.Presentation.Views
         {
             _toast.text = message;
             _toastLeft = ToastSeconds;
+            var pill = _toastPill.rectTransform;
+            pill.sizeDelta = new Vector2(Mathf.Clamp(_toast.preferredWidth + ToastPadding * 2f, ToastMinWidth, ToastMaxWidth), pill.sizeDelta.y);
             _toastPill.gameObject.SetActive(true);
             ScaleAnimator.On(_toastPill).PopIn();
         }
@@ -174,8 +193,8 @@ namespace SheepStrike.Presentation.Views
 
         public void HideOverlays()
         {
-            _resultPanel.gameObject.SetActive(false);
-            _stuckPanel.gameObject.SetActive(false);
+            UiTransition.On(_resultPanel, UiTransition.Motion.Fade).Hide();
+            UiTransition.On(_stuckPanel, UiTransition.Motion.Fade).Hide();
         }
 
         /// <summary>Screen-space y (pixels) of the lower edge of the top bar.</summary>
@@ -296,10 +315,11 @@ namespace SheepStrike.Presentation.Views
             return box;
         }
 
+        /// <summary>The dim backdrop fades in and the dialog pops; hiding fades them out.</summary>
         private static void ShowOverlay(RectTransform overlay)
         {
-            overlay.gameObject.SetActive(true);
-            ScaleAnimator.On(overlay.Find("Box")).PopIn();
+            UiTransition.On(overlay, UiTransition.Motion.Fade).Show();
+            UiTransition.On(overlay.Find("Box"), UiTransition.Motion.Pop).Show();
         }
 
         private void HookButtonSounds(RectTransform root)

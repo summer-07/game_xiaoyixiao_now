@@ -42,7 +42,12 @@ namespace SheepStrike.Presentation.Views
 
             if (onClose != null) AddCloseButton(art, size, onClose);
             Root.gameObject.SetActive(false);
+            _backdrop = UiTransition.On(Root, UiTransition.Motion.Fade);
+            _board = UiTransition.On(Board, UiTransition.Motion.Pop);
         }
+
+        private readonly UiTransition _backdrop;
+        private readonly UiTransition _board;
 
         /// <summary>Full-screen backdrop; toggle this to show or hide the panel.</summary>
         public RectTransform Root { get; }
@@ -55,16 +60,17 @@ namespace SheepStrike.Presentation.Views
 
         public Text Title { get; }
 
-        public bool IsOpen => Root.gameObject.activeSelf;
+        public bool IsOpen => _backdrop.IsShown;
 
+        /// <summary>The backdrop fades in and the board pops; closing fades both out.</summary>
         public void Show()
         {
-            Root.gameObject.SetActive(true);
             Root.SetAsLastSibling();
-            ScaleAnimator.On(Board).PopIn();
+            _backdrop.Show();
+            _board.Show();
         }
 
-        public void Hide() => Root.gameObject.SetActive(false);
+        public void Hide() => _backdrop.Hide();
 
         private void AddClip(ArtLibrary art, float x, float topY)
         {

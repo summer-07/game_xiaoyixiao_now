@@ -95,18 +95,23 @@ namespace SheepStrike.Presentation.Views
 
             SelectTab(true);
             _root.gameObject.SetActive(false);
+            _backdrop = UiTransition.On(_root, UiTransition.Motion.Fade);
+            _sheetMotion = UiTransition.On(_sheet, UiTransition.Motion.FromBottom);
         }
 
-        public bool IsOpen => _root.gameObject.activeSelf;
+        private readonly UiTransition _backdrop;
+        private readonly UiTransition _sheetMotion;
+
+        public bool IsOpen => _backdrop.IsShown;
 
         public void Show()
         {
-            _root.gameObject.SetActive(true);
             _root.SetAsLastSibling();
-            ScaleAnimator.On(_sheet).PopIn();
+            _backdrop.Show();
+            _sheetMotion.Show();
         }
 
-        public void Hide() => _root.gameObject.SetActive(false);
+        public void Hide() => _backdrop.Hide();
 
         /// <param name="rows">Shown in order; anything past <see cref="MaxRows"/> is ignored.</param>
         public void Render(bool friendsTab, IReadOnlyList<LeaderboardRow> rows, string note)

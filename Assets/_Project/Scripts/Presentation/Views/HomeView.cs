@@ -20,9 +20,13 @@ namespace SheepStrike.Presentation.Views
         private const float SideStep = 210f;
         private const float IconSize = 130f;
 
+        private const float SideStagger = 0.07f;
+
         private readonly RectTransform _root;
         private readonly Text _level;
         private readonly RectTransform _start;
+        private readonly System.Collections.Generic.List<UiTransition> _parts = new System.Collections.Generic.List<UiTransition>();
+        private UiTransition _rootMotion;
 
         public Action StartTapped;
         public Action SettingsTapped;
@@ -39,19 +43,27 @@ namespace SheepStrike.Presentation.Views
             BuildCollectionButton(art, SideBottom + SideStep * 2f);
             BuildLeaderboardButton(art, SideBottom + SideStep);
             BuildDesktopButton(art, SideBottom);
+            _parts.Add(UiTransition.On(_start, UiTransition.Motion.FromBottom, SideStagger * 3f));
             _root.gameObject.SetActive(false);
+            _rootMotion = UiTransition.On(_root, UiTransition.Motion.Fade);
         }
 
-        public bool IsVisible => _root.gameObject.activeSelf;
+        public bool IsVisible => _rootMotion.IsShown;
 
+        /// <summary>The gear slides in from the left, the side buttons one by one from the right, the start button rises.</summary>
         public void Show(int levelNumber)
         {
             _level.text = Texts.Level(levelNumber);
-            _root.gameObject.SetActive(true);
-            ScaleAnimator.On(_start).PopIn();
+            _rootMotion.Show();
+            foreach (var part in _parts) part.Show();
         }
 
-        public void Hide() => _root.gameObject.SetActive(false);
+        /// <summary>Everything slides back out while the screen fades.</summary>
+        public void Hide()
+        {
+            foreach (var part in _parts) part.Hide();
+            _rootMotion.Hide();
+        }
 
         private void BuildGear(ArtLibrary art)
         {
@@ -59,6 +71,7 @@ namespace SheepStrike.Presentation.Views
             UiFactory.AddImage(rect, art.Disc, Palette.PanelDark, true);
             UiFactory.AddImage(UiFactory.Rect("Gear", rect, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one * (HudView.GearSize * 0.78f)), art.Gear, Palette.MenuIcon);
             UiFactory.AddButton(rect, () => SettingsTapped?.Invoke());
+            _parts.Add(UiTransition.On(rect, UiTransition.Motion.FromLeft));
         }
 
         private RectTransform BuildStartButton(ArtLibrary art, out Text level)
@@ -128,6 +141,7 @@ namespace SheepStrike.Presentation.Views
             var label = UiFactory.AddLabel(UiFactory.Rect("Caption", rect, new Vector2(0.5f, 0f), new Vector2(0f, -28f), new Vector2(220f, 50f)), art.Font, 40, TextAnchor.MiddleCenter);
             label.text = caption;
             ScaleAnimator.On(UiFactory.AddButton(rect, onTap)).Breathe(0.03f, 0.7f, y * 0.01f);
+            _parts.Add(UiTransition.On(rect, UiTransition.Motion.FromRight, _parts.Count * SideStagger));
             return rect;
         }
     }

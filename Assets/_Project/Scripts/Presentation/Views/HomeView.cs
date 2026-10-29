@@ -33,12 +33,14 @@ namespace SheepStrike.Presentation.Views
         public Action CollectionTapped;
         public Action LeaderboardTapped;
         public Action AddToDesktopTapped;
+        public Action AgeTipsTapped;
 
         public HomeView(RectTransform parent, ArtLibrary art)
         {
             _root = UiFactory.Stretch("Home", parent);
             _root.gameObject.AddComponent<SafeAreaFitter>();
             BuildGear(art);
+            BuildAgeBadge(art);
             _start = BuildStartButton(art, out _level);
             BuildCollectionButton(art, SideBottom + SideStep * 2f);
             BuildLeaderboardButton(art, SideBottom + SideStep);
@@ -72,6 +74,19 @@ namespace SheepStrike.Presentation.Views
             UiFactory.AddImage(UiFactory.Rect("Gear", rect, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one * (HudView.GearSize * 0.78f)), art.Gear, Palette.MenuIcon);
             UiFactory.AddButton(rect, () => SettingsTapped?.Invoke());
             _parts.Add(UiTransition.On(rect, UiTransition.Motion.FromLeft));
+        }
+
+        /// <summary>The age-rating badge players must be able to see on the start screen; tapping it explains the rating.</summary>
+        private void BuildAgeBadge(ArtLibrary art)
+        {
+            var rect = UiFactory.Rect("AgeBadge", _root, new Vector2(1f, 1f), new Vector2(-HudView.GearPosition.x, HudView.GearPosition.y), new Vector2(110f, 110f));
+            UiFactory.AddBox(rect, art.BevelBox, Palette.ButtonGreen, true);
+            var age = UiFactory.AddLabel(UiFactory.Rect("Age", rect, new Vector2(0.5f, 0.5f), new Vector2(0f, 6f), new Vector2(110f, 70f)), art.Font, 56, TextAnchor.MiddleCenter);
+            age.text = Texts.AgeBadge(ComplianceInfo.MinimumAge);
+            var caption = UiFactory.AddLabel(UiFactory.Rect("Caption", rect, new Vector2(0.5f, 0f), new Vector2(0f, -28f), new Vector2(200f, 44f)), art.Font, 32, TextAnchor.MiddleCenter);
+            caption.text = Texts.AgeTipsTitle;
+            UiFactory.AddButton(rect, () => AgeTipsTapped?.Invoke());
+            _parts.Add(UiTransition.On(rect, UiTransition.Motion.FromRight));
         }
 
         private RectTransform BuildStartButton(ArtLibrary art, out Text level)

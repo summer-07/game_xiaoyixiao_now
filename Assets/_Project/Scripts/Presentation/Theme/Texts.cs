@@ -47,6 +47,16 @@ namespace SheepStrike.Presentation.Theme
         public const string GlobalTab = "总榜";
         public const string Me = "我";
         public const string MyBest = "我的最佳纪录";
+
+        /// <summary>《健康游戏忠告》, required verbatim on the start screen.</summary>
+        public const string HealthAdvice = "抵制不良游戏，拒绝盗版游戏。注意自我保护，谨防受骗上当。\n适度游戏益脑，沉迷游戏伤身。合理安排时间，享受健康生活。";
+        public const string AgeTipsTitle = "适龄提示";
+        public const string AgeTipsBody =
+            "1. 本游戏是一款休闲消除类游戏，适合 {0} 周岁及以上用户。\n" +
+            "2. 游戏画面为卡通风格，不含暴力、血腥、恐怖等内容，不含任何付费抽奖。\n" +
+            "3. 游戏道具可通过免费次数或观看广告获得，无需付费。\n" +
+            "4. 请未成年人在监护人陪同下合理安排游戏时间，注意休息，保护视力。";
+        public static string AgeBadge(int age) => $"{age}+";
         public const string LeaderboardOffline = "发布到抖音后可查看好友和全国排行";
 
         public static string Level(int number) => $"第 {number} 关";

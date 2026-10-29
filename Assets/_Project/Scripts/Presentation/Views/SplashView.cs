@@ -16,7 +16,9 @@ namespace SheepStrike.Presentation.Views
         private const float BarWidth = 620f;
         private const float BarHeight = 34f;
         private const float BarInset = 6f;
-        private const float BarBottom = 170f;
+        private const float BarBottom = 300f;
+        private const float NoticeBottom = 40f;
+        private static readonly Color NoticeShade = new Color(0f, 0f, 0f, 0.45f);
 
         private Image _fill;
         private RectTransform _title;
@@ -34,6 +36,7 @@ namespace SheepStrike.Presentation.Views
             safe.gameObject.AddComponent<SafeAreaFitter>();
             _title = BuildTitle(safe, art);
             _fill = BuildLoadingBar(safe, art);
+            BuildNotice(root, safe, art);
             _fade = UiTransition.On(root, UiTransition.Motion.Fade);
         }
 
@@ -85,6 +88,26 @@ namespace SheepStrike.Presentation.Views
             shadow.effectColor = new Color(0f, 0f, 0f, 0.35f);
             shadow.effectDistance = new Vector2(0f, -14f);
             return rect;
+        }
+
+        /// <summary>
+        /// 《健康游戏忠告》 and the registration numbers, required on the start screen. A soft shade behind
+        /// them keeps the small text readable over the meadow.
+        /// </summary>
+        private static void BuildNotice(RectTransform root, RectTransform safe, ArtLibrary art)
+        {
+            var shade = UiFactory.Rect("NoticeShade", root, new Vector2(0.5f, 0f), Vector2.zero, new Vector2(1080f, 0f));
+            shade.anchorMin = new Vector2(0f, 0f);
+            shade.anchorMax = new Vector2(1f, 0f);
+            shade.pivot = new Vector2(0.5f, 0f);
+            shade.sizeDelta = new Vector2(0f, BarBottom + NoticeBottom);
+            UiFactory.AddImage(shade, null, NoticeShade);
+
+            var lines = new System.Collections.Generic.List<string>(ComplianceInfo.Lines());
+            string registration = string.Join("    ", lines);
+            var notice = UiFactory.AddLabel(UiFactory.Rect("Notice", safe, new Vector2(0.5f, 0f), new Vector2(0f, NoticeBottom + 100f), new Vector2(1040f, 200f)), art.Font, 32, TextAnchor.LowerCenter);
+            notice.text = registration.Length > 0 ? Texts.HealthAdvice + "\n" + registration : Texts.HealthAdvice;
+            notice.lineSpacing = 1.2f;
         }
 
         private static Image BuildLoadingBar(RectTransform parent, ArtLibrary art)

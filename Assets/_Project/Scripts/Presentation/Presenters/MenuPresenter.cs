@@ -19,6 +19,7 @@ namespace SheepStrike.Presentation.Presenters
             public SettingsPanelView Settings;
             public CollectionPanelView Collection;
             public LeaderboardPanelView Leaderboard;
+            public AgeTipsPanelView AgeTips;
             public HudView Hud;
             public SoundBoard Sound;
         }
@@ -67,6 +68,7 @@ namespace SheepStrike.Presentation.Presenters
             home.SettingsTapped = Voiced(() => OpenSettings(inGame: false));
             home.CollectionTapped = Voiced(OpenCollection);
             home.LeaderboardTapped = Voiced(OpenLeaderboard);
+            home.AgeTipsTapped = Voiced(_views.AgeTips.Show);
             _views.Leaderboard.CloseTapped = Voiced(_views.Leaderboard.Hide);
             _views.Leaderboard.TabTapped = friends =>
             {
@@ -154,6 +156,12 @@ namespace SheepStrike.Presentation.Presenters
             PlayLevel(level);
         }
 
+        public void CloseAgeTips()
+        {
+            _views.Sound.Tap();
+            _views.AgeTips.Hide();
+        }
+
         public void OnCollectionClosed()
         {
             _views.Sound.Tap();
@@ -183,6 +191,7 @@ namespace SheepStrike.Presentation.Presenters
             _views.Settings.Hide();
             _views.Collection.Hide();
             _views.Leaderboard.Hide();
+            _views.AgeTips.Hide();
         }
 
         private void ApplyAllSettings()

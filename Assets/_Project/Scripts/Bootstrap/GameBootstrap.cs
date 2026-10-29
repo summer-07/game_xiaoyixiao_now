@@ -103,6 +103,7 @@ namespace SheepStrike.Bootstrap
                     page => menu.OnCollectionPageRequested(page),
                     () => menu.OnCollectionClosed()),
                 Leaderboard = new LeaderboardPanelView(root, art),
+                AgeTips = new AgeTipsPanelView(root, art, () => menu.CloseAgeTips()),
                 Hud = hud,
                 Sound = sound
             };

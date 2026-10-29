@@ -12,9 +12,21 @@ namespace SheepStrike.Presentation.Views
     /// </summary>
     public sealed class HudView : MonoBehaviour
     {
-        private const float TopBarHeight = 220f;
+        private const float TopBarHeight = 230f;
         private const float ToastSeconds = 1.6f;
+        private const float ToastFadeSeconds = 0.4f;
         private const int ComboVisibleFrom = 3;
+        private const float ComboPunch = 0.22f;
+        private const float ComboGrowthPerTier = 0.1f;
+        private const float RainbowSpeed = 0.6f;
+
+        private static readonly Color[] ComboTierColors =
+        {
+            Palette.Combo,
+            new Color32(0xFF, 0x9A, 0x2E, 0xFF),
+            new Color32(0xFF, 0x5C, 0xC8, 0xFF),
+            new Color32(0x4F, 0xE3, 0xFF, 0xFF)
+        };
 
         public Action<int, int> SheepTapped;
         public Action<BoosterType> BoosterTapped;
@@ -24,6 +36,9 @@ namespace SheepStrike.Presentation.Views
         public Action RescueTapped;
         public Action GiveUpTapped;
 
+        /// <summary>Raised for every HUD button press except the sheep, which the presenter voices itself.</summary>
+        public Action ButtonPressed;
+
         private ArtLibrary _art;
         private RectTransform _topBar;
         private Text _level;
@@ -32,9 +47,11 @@ namespace SheepStrike.Presentation.Views
         private Text _remaining;
         private Text _timer;
         private Text _combo;
+        private ScaleAnimator _comboScale;
+        private int _comboTier;
         private Text _toast;
+        private Image _toastPill;
         private float _toastLeft;
-        private float _comboPunch;
         private RectTransform _resultPanel;
         private Text _resultText;
         private GameObject _nextButton;
@@ -43,6 +60,8 @@ namespace SheepStrike.Presentation.Views
         public SlotRowView Slots { get; private set; }
         public SheepQueueView Queue { get; private set; }
         public BoosterBarView Boosters { get; private set; }
+        public ComboFxView ComboFx { get; private set; }
+        public DeployFlightView Flights { get; private set; }
 
         public void Build(ArtLibrary art, int maxSlots)
         {
@@ -51,20 +70,21 @@ namespace SheepStrike.Presentation.Views
 
             BuildTopBar(root);
             Boosters = new BoosterBarView(root, art, b => BoosterTapped?.Invoke(b));
-            Queue = new SheepQueueView(root, BoosterBarView.Height + 10f, art, (c, r) => SheepTapped?.Invoke(c, r));
-            Slots = new SlotRowView(root, BoosterBarView.Height + 10f + SheepQueueView.VisibleRows * 180f + 70f, art, maxSlots,
+            Queue = new SheepQueueView(root, BoosterBarView.Height + 40f, art, (c, r) => SheepTapped?.Invoke(c, r));
+            Slots = new SlotRowView(root, BoosterBarView.Height + 40f + SheepQueueView.VisibleRows * 180f + 50f, art, maxSlots,
                 () => BoosterTapped?.Invoke(BoosterType.ExtraPen));
 
-            _combo = UiFactory.AddLabel(UiFactory.Rect("Combo", root, new Vector2(0.5f, 1f), new Vector2(180f, -TopBarHeight - 60f), new Vector2(500f, 100f)), art.Font, 76, TextAnchor.MiddleCenter, Palette.Combo);
-            _toast = UiFactory.AddLabel(UiFactory.Rect("Toast", root, new Vector2(0.5f, 0.5f), new Vector2(0f, 120f), new Vector2(1000f, 90f)), art.Font, 46, TextAnchor.MiddleCenter);
-
-            var hint = UiFactory.AddLabel(UiFactory.Rect("RotateHint", root, new Vector2(0f, 1f), new Vector2(150f, -TopBarHeight - 40f), new Vector2(260f, 50f)), art.Font, 32, TextAnchor.MiddleCenter);
-            hint.text = Texts.RotateHint;
+            _combo = UiFactory.AddLabel(UiFactory.Rect("Combo", root, new Vector2(0.5f, 1f), new Vector2(190f, -TopBarHeight - 70f), new Vector2(560f, 110f)), art.Font, 84, TextAnchor.MiddleCenter, Palette.Combo);
+            _comboScale = ScaleAnimator.On(_combo);
+            Flights = new DeployFlightView(root, art);
+            ComboFx = new ComboFxView(root, art);
+            BuildToast(root);
 
             BuildResultPanel(root);
             BuildStuckPanel(root);
             HideOverlays();
-            SetCombo(0);
+            SetCombo(0, 0);
+            HookButtonSounds(root);
         }
 
         public void SetLevel(int number, string targetId)
@@ -73,25 +93,32 @@ namespace SheepStrike.Presentation.Views
             _target.text = Texts.Animal(targetId);
             _targetIcon.sprite = _art.Target(targetId);
             _targetIcon.enabled = _targetIcon.sprite != null;
+            ScaleAnimator.On(_targetIcon).PopIn();
         }
 
         public void SetRemaining(int voxels) => _remaining.text = Texts.Remaining(voxels);
 
         public void SetTimer(float seconds) => _timer.text = Texts.Timer(seconds);
 
-        public void SetCombo(int combo)
+        /// <param name="tier">Cosmetic tier from <see cref="ComboTier"/>; grows and recolours the counter.</param>
+        public void SetCombo(int combo, int tier)
         {
             bool visible = combo >= ComboVisibleFrom;
             _combo.gameObject.SetActive(visible);
             if (!visible) return;
             _combo.text = Texts.Combo(combo);
-            _comboPunch = 1f;
+            _comboTier = tier;
+            _combo.color = ComboTierColors[Mathf.Min(tier, ComboTierColors.Length - 1)];
+            _comboScale.BaseScale = 1f + tier * ComboGrowthPerTier;
+            _comboScale.Punch(ComboPunch);
         }
 
         public void Toast(string message)
         {
             _toast.text = message;
             _toastLeft = ToastSeconds;
+            _toastPill.gameObject.SetActive(true);
+            ScaleAnimator.On(_toastPill).PopIn();
         }
 
         public void ShowResult(bool won, string message)
@@ -99,13 +126,13 @@ namespace SheepStrike.Presentation.Views
             HideOverlays();
             _resultText.text = message;
             _nextButton.SetActive(won);
-            _resultPanel.gameObject.SetActive(true);
+            ShowOverlay(_resultPanel);
         }
 
         public void ShowStuck()
         {
             HideOverlays();
-            _stuckPanel.gameObject.SetActive(true);
+            ShowOverlay(_stuckPanel);
         }
 
         public void HideOverlays()
@@ -124,66 +151,120 @@ namespace SheepStrike.Presentation.Views
 
         private void Update()
         {
-            if (_toastLeft > 0f)
+            ComboFx.Tick(Time.deltaTime);
+            Flights.Tick(Time.deltaTime);
+            if (_comboTier >= ComboTierColors.Length && _combo.gameObject.activeSelf)
             {
-                _toastLeft -= Time.deltaTime;
-                var color = _toast.color;
-                color.a = Mathf.Clamp01(_toastLeft / 0.4f);
-                _toast.color = color;
+                _combo.color = Color.HSVToRGB(Mathf.Repeat(Time.time * RainbowSpeed, 1f), 0.65f, 1f);
             }
 
-            if (_comboPunch > 0f)
-            {
-                _comboPunch = Mathf.Max(0f, _comboPunch - Time.deltaTime * 6f);
-                _combo.transform.localScale = Vector3.one * (1f + 0.25f * _comboPunch);
-            }
+            if (_toastLeft <= 0f) return;
+            _toastLeft -= Time.deltaTime;
+            float alpha = Mathf.Clamp01(_toastLeft / ToastFadeSeconds);
+            _toast.color = new Color(1f, 1f, 1f, alpha);
+            _toastPill.color = new Color(Palette.PanelDark.r, Palette.PanelDark.g, Palette.PanelDark.b, Palette.PanelDark.a * alpha);
+            if (_toastLeft <= 0f) _toastPill.gameObject.SetActive(false);
         }
 
         private void BuildTopBar(RectTransform root)
         {
             _topBar = UiFactory.Rect("TopBar", root, new Vector2(0.5f, 1f), new Vector2(0f, -TopBarHeight * 0.5f), new Vector2(1080f, TopBarHeight));
 
-            _level = UiFactory.AddLabel(UiFactory.Rect("Level", _topBar, new Vector2(0f, 0.5f), new Vector2(150f, 30f), new Vector2(260f, 80f)), _art.Font, 56, TextAnchor.MiddleCenter);
-            _timer = UiFactory.AddLabel(UiFactory.Rect("Timer", _topBar, new Vector2(0f, 0.5f), new Vector2(150f, -45f), new Vector2(260f, 60f)), _art.Font, 44, TextAnchor.MiddleCenter);
+            var levelPill = UiFactory.Rect("LevelPill", _topBar, new Vector2(0f, 0.5f), new Vector2(160f, 40f), new Vector2(250f, 90f));
+            UiFactory.AddBox(levelPill, _art.FlatBox, Palette.PanelDark);
+            _level = UiFactory.AddLabel(UiFactory.Stretch("Level", levelPill), _art.Font, 52, TextAnchor.MiddleCenter);
 
-            var targetRect = UiFactory.Rect("TargetIcon", _topBar, new Vector2(0.5f, 0.5f), new Vector2(0f, 20f), new Vector2(130f, 130f));
+            var timerPill = UiFactory.Rect("TimerPill", _topBar, new Vector2(0f, 0.5f), new Vector2(160f, -48f), new Vector2(190f, 64f));
+            UiFactory.AddBox(timerPill, _art.FlatBox, Palette.PillLight);
+            _timer = UiFactory.AddLabel(UiFactory.Stretch("Timer", timerPill), _art.Font, 42, TextAnchor.MiddleCenter);
+
+            var hint = UiFactory.AddLabel(UiFactory.Rect("RotateHint", _topBar, new Vector2(0f, 0.5f), new Vector2(160f, -110f), new Vector2(260f, 44f)), _art.Font, 32, TextAnchor.MiddleCenter);
+            hint.text = Texts.RotateHint;
+
+            var targetRect = UiFactory.Rect("TargetIcon", _topBar, new Vector2(0.5f, 0.5f), new Vector2(0f, 24f), new Vector2(140f, 140f));
             _targetIcon = UiFactory.AddImage(targetRect, null, Color.white);
-            _target = UiFactory.AddLabel(UiFactory.Rect("Target", _topBar, new Vector2(0.5f, 0.5f), new Vector2(0f, -70f), new Vector2(400f, 50f)), _art.Font, 38, TextAnchor.MiddleCenter);
+            _target = UiFactory.AddLabel(UiFactory.Rect("Target", _topBar, new Vector2(0.5f, 0.5f), new Vector2(0f, -72f), new Vector2(400f, 54f)), _art.Font, 40, TextAnchor.MiddleCenter);
 
-            _remaining = UiFactory.AddLabel(UiFactory.Rect("Remaining", _topBar, new Vector2(1f, 0.5f), new Vector2(-160f, 0f), new Vector2(300f, 80f)), _art.Font, 46, TextAnchor.MiddleCenter);
+            BuildRemainingPill();
+        }
+
+        private void BuildRemainingPill()
+        {
+            var pill = UiFactory.Rect("RemainingPill", _topBar, new Vector2(1f, 0.5f), new Vector2(-170f, 30f), new Vector2(260f, 120f));
+            UiFactory.AddBox(pill, _art.BevelBox, Palette.PillLight);
+            var caption = UiFactory.AddLabel(UiFactory.Rect("Caption", pill, new Vector2(0.5f, 1f), new Vector2(0f, -30f), new Vector2(260f, 40f)), _art.Font, 30, TextAnchor.MiddleCenter, Palette.PillLightText);
+            RemoveOutlines(caption);
+            caption.text = Texts.RemainingLabel;
+            _remaining = UiFactory.AddLabel(UiFactory.Rect("Remaining", pill, new Vector2(0.5f, 0f), new Vector2(0f, 42f), new Vector2(260f, 60f)), _art.Font, 52, TextAnchor.MiddleCenter, Palette.PillLightText);
+            RemoveOutlines(_remaining);
+        }
+
+        private void BuildToast(RectTransform root)
+        {
+            var pill = UiFactory.Rect("Toast", root, new Vector2(0.5f, 0.5f), new Vector2(0f, 120f), new Vector2(820f, 100f));
+            _toastPill = UiFactory.AddBox(pill, _art.FlatBox, Palette.PanelDark);
+            _toast = UiFactory.AddLabel(UiFactory.Stretch("Text", pill), _art.Font, 44, TextAnchor.MiddleCenter);
+            pill.gameObject.SetActive(false);
         }
 
         private void BuildResultPanel(RectTransform root)
         {
             _resultPanel = CreateOverlay(root, "Result");
-            var box = UiFactory.Rect("Box", _resultPanel, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860f, 860f));
-            UiFactory.AddImage(box, null, Palette.Panel);
-            _resultText = UiFactory.AddLabel(UiFactory.Rect("Message", box, new Vector2(0.5f, 0.5f), new Vector2(0f, 200f), new Vector2(800f, 320f)), _art.Font, 60, TextAnchor.MiddleCenter);
+            var box = CreateDialog(_resultPanel, new Vector2(860f, 900f));
+            _resultText = UiFactory.AddLabel(UiFactory.Rect("Message", box, new Vector2(0.5f, 0.5f), new Vector2(0f, 220f), new Vector2(800f, 320f)), _art.Font, 64, TextAnchor.MiddleCenter);
+            _resultText.lineSpacing = 1.15f;
 
-            _nextButton = UiFactory.TextButton(box, "Next", new Vector2(0f, -40f), new Vector2(560f, 130f), _art.Font, Texts.Next, new Color32(0x4C, 0xC0, 0x5A, 0xFF), () => NextTapped?.Invoke()).gameObject;
-            UiFactory.TextButton(box, "Retry", new Vector2(0f, -200f), new Vector2(560f, 130f), _art.Font, Texts.Retry, new Color32(0xF0, 0xA0, 0x30, 0xFF), () => RetryTapped?.Invoke());
-            UiFactory.TextButton(box, "Share", new Vector2(0f, -350f), new Vector2(560f, 110f), _art.Font, Texts.Share, new Color32(0x3B, 0x7B, 0xD9, 0xFF), () => ShareTapped?.Invoke());
+            _nextButton = UiFactory.TextButton(box, "Next", new Vector2(0f, -30f), new Vector2(580f, 140f), _art, Texts.Next, Palette.ButtonGreen, () => NextTapped?.Invoke()).gameObject;
+            UiFactory.TextButton(box, "Retry", new Vector2(0f, -200f), new Vector2(580f, 140f), _art, Texts.Retry, Palette.ButtonOrange, () => RetryTapped?.Invoke());
+            UiFactory.TextButton(box, "Share", new Vector2(0f, -355f), new Vector2(580f, 120f), _art, Texts.Share, Palette.ButtonBlue, () => ShareTapped?.Invoke());
         }
 
         private void BuildStuckPanel(RectTransform root)
         {
             _stuckPanel = CreateOverlay(root, "Stuck");
-            var box = UiFactory.Rect("Box", _stuckPanel, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860f, 720f));
-            UiFactory.AddImage(box, null, Palette.Panel);
+            var box = CreateDialog(_stuckPanel, new Vector2(860f, 760f));
 
-            var title = UiFactory.AddLabel(UiFactory.Rect("Title", box, new Vector2(0.5f, 0.5f), new Vector2(0f, 240f), new Vector2(800f, 100f)), _art.Font, 66, TextAnchor.MiddleCenter, Palette.Combo);
+            var title = UiFactory.AddLabel(UiFactory.Rect("Title", box, new Vector2(0.5f, 0.5f), new Vector2(0f, 255f), new Vector2(800f, 100f)), _art.Font, 72, TextAnchor.MiddleCenter, Palette.Combo);
             title.text = Texts.StuckTitle;
-            var body = UiFactory.AddLabel(UiFactory.Rect("Body", box, new Vector2(0.5f, 0.5f), new Vector2(0f, 90f), new Vector2(800f, 160f)), _art.Font, 44, TextAnchor.MiddleCenter);
+            var body = UiFactory.AddLabel(UiFactory.Rect("Body", box, new Vector2(0.5f, 0.5f), new Vector2(0f, 100f), new Vector2(800f, 160f)), _art.Font, 46, TextAnchor.MiddleCenter);
             body.text = Texts.StuckBody;
 
-            UiFactory.TextButton(box, "Rescue", new Vector2(0f, -110f), new Vector2(600f, 130f), _art.Font, Texts.Rescue, new Color32(0x4C, 0xC0, 0x5A, 0xFF), () => RescueTapped?.Invoke());
-            UiFactory.TextButton(box, "GiveUp", new Vector2(0f, -260f), new Vector2(400f, 110f), _art.Font, Texts.GiveUp, new Color32(0x8A, 0x86, 0x9E, 0xFF), () => GiveUpTapped?.Invoke());
+            UiFactory.TextButton(box, "Rescue", new Vector2(0f, -100f), new Vector2(620f, 140f), _art, Texts.Rescue, Palette.ButtonGreen, () => RescueTapped?.Invoke());
+            UiFactory.TextButton(box, "GiveUp", new Vector2(0f, -265f), new Vector2(400f, 116f), _art, Texts.GiveUp, Palette.ButtonGrey, () => GiveUpTapped?.Invoke());
+        }
+
+        private RectTransform CreateDialog(RectTransform overlay, Vector2 size)
+        {
+            var box = UiFactory.Rect("Box", overlay, new Vector2(0.5f, 0.5f), Vector2.zero, size);
+            UiFactory.AddBox(box, _art.BevelBox, Palette.Panel);
+            var inner = UiFactory.Rect("Inner", box, new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), size - new Vector2(36f, 52f));
+            UiFactory.AddBox(inner, _art.FlatBox, new Color(1f, 1f, 1f, 0.06f));
+            return box;
+        }
+
+        private static void ShowOverlay(RectTransform overlay)
+        {
+            overlay.gameObject.SetActive(true);
+            ScaleAnimator.On(overlay.Find("Box")).PopIn();
+        }
+
+        private void HookButtonSounds(RectTransform root)
+        {
+            foreach (var button in root.GetComponentsInChildren<Button>(true))
+            {
+                button.onClick.AddListener(() => ButtonPressed?.Invoke());
+            }
+        }
+
+        private static void RemoveOutlines(Text text)
+        {
+            foreach (var outline in text.GetComponents<Outline>()) Destroy(outline);
         }
 
         private static RectTransform CreateOverlay(RectTransform root, string name)
         {
             var overlay = UiFactory.Stretch(name, root);
-            UiFactory.AddImage(overlay, null, new Color(0f, 0f, 0f, 0.55f), true);
+            UiFactory.AddImage(overlay, null, Palette.Dim, true);
             return overlay;
         }
     }

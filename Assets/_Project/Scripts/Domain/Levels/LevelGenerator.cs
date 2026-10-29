@@ -22,14 +22,15 @@ namespace SheepStrike.Domain.Levels
                 throw new ArgumentException("Invalid ammo range in tuning.", nameof(tuning));
             }
 
+            var painted = InteriorPainter.Paint(voxels, tuning.InteriorPaletteSize, tuning.InteriorShellThickness);
             var random = new SeededRandom(seed);
-            var flock = SplitIntoSheep(CountColors(voxels), tuning, random);
+            var flock = SplitIntoSheep(CountColors(painted), tuning, random);
             Shuffle(flock, random);
 
             return new LevelDefinition(
                 number,
                 targetId,
-                voxels,
+                painted,
                 DealIntoColumns(flock, tuning.Columns),
                 tuning.StartingSlots,
                 tuning.MaxSlots,

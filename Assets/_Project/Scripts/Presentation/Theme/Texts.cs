@@ -20,10 +20,25 @@ namespace SheepStrike.Presentation.Theme
         public const string FrontOnly = "只能派出最前排的羊";
         public const string DogReady = "牧羊犬就位：可以派出任意一只羊";
         public const string RotateHint = "拖动旋转";
+        public const string RemainingLabel = "剩余数量";
+        public const string AdBadge = "视频";
+        public const string Unlock = "解锁";
 
         public static string Level(int number) => $"第 {number} 关";
-        public static string Remaining(int count) => $"剩余 {count}";
-        public static string Combo(int combo) => $"连击 x{combo}";
+        public static string Remaining(int count) => count.ToString();
+        public static string Combo(int combo) => $"连击 x {combo}";
+
+        /// <summary>Banner shown when the combo reaches tier 1..ComboTier.Count.</summary>
+        public static string ComboBanner(int tier)
+        {
+            switch (tier)
+            {
+                case 1: return "不错哦！";
+                case 2: return "太棒啦！";
+                case 3: return "势不可挡！";
+                default: return "羊神降临！";
+            }
+        }
         public static string Timer(float seconds)
         {
             int total = Mathf.CeilToInt(Mathf.Max(0f, seconds));

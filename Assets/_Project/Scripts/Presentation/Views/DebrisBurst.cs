@@ -4,7 +4,10 @@ using UnityEngine;
 
 namespace SheepStrike.Presentation.Views
 {
-    /// <summary>Cube shards that burst out when a voxel is destroyed. Simulated by hand, no physics engine needed.</summary>
+    /// <summary>
+    /// Cube shards that burst out when a voxel is destroyed, plus white sparkles at higher combo tiers.
+    /// Simulated by hand, no physics engine needed.
+    /// </summary>
     public sealed class DebrisBurst : MonoBehaviour
     {
         private const int ShardsPerHit = 10;
@@ -16,7 +19,11 @@ namespace SheepStrike.Presentation.Views
         private const float MaxShardSize = 0.15f;
         private const float SpinDegreesPerSecond = 540f;
         private const float ShrinkPerSecond = 1.2f;
-        private const int MaxShards = 400;
+        private const int MaxShards = 500;
+        private const int ExtraShardsPerTier = 4;
+        private const float SpeedPerTier = 0.15f;
+        private const int SparklesPerTier = 3;
+        private const float SparkleScale = 0.6f;
 
         private sealed class Shard
         {
@@ -32,19 +39,27 @@ namespace SheepStrike.Presentation.Views
 
         public void Init(RenderKit kit) => _kit = kit;
 
-        public void Emit(Vector3 position, GameColor color)
+        /// <param name="comboTier">0 for a plain hit; each tier throws more, faster shards and adds sparkles.</param>
+        public void Emit(Vector3 position, GameColor color, int comboTier)
         {
-            for (int i = 0; i < ShardsPerHit && _active.Count < MaxShards; i++)
+            float speed = BurstSpeed * (1f + comboTier * SpeedPerTier);
+            Spawn(position, color, ShardsPerHit + comboTier * ExtraShardsPerTier, speed, 1f);
+            Spawn(position, GameColor.White, comboTier * SparklesPerTier, speed * 1.3f, SparkleScale);
+        }
+
+        private void Spawn(Vector3 position, GameColor color, int count, float speed, float sizeScale)
+        {
+            for (int i = 0; i < count && _active.Count < MaxShards; i++)
             {
                 var shard = _pool.Count > 0
                     ? _pool.Pop()
                     : new Shard { Go = _kit.CreateRenderer("Shard", _kit.CubeMesh, transform) };
                 shard.Go.SetActive(true);
                 shard.Go.transform.position = position;
-                shard.Go.transform.localScale = Vector3.one * Random.Range(MinShardSize, MaxShardSize);
+                shard.Go.transform.localScale = Vector3.one * (Random.Range(MinShardSize, MaxShardSize) * sizeScale);
                 shard.Go.transform.rotation = Random.rotation;
                 shard.Go.GetComponent<MeshRenderer>().sharedMaterial = _kit.MaterialOf(color);
-                shard.Velocity = Random.onUnitSphere * Random.Range(0.5f, 1f) * BurstSpeed + Vector3.up * UpwardKick;
+                shard.Velocity = Random.onUnitSphere * Random.Range(0.5f, 1f) * speed + Vector3.up * UpwardKick;
                 shard.SpinAxis = Random.onUnitSphere;
                 shard.Life = LifeSeconds;
                 _active.Add(shard);

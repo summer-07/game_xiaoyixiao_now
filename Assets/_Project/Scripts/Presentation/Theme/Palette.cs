@@ -3,33 +3,47 @@ using UnityEngine;
 
 namespace SheepStrike.Presentation.Theme
 {
+    /// <summary>Toy-like, saturated colours: flat purple sky, dark rounded pills, chunky bevelled buttons.</summary>
     public static class Palette
     {
-        public static readonly Color Background = new Color32(0x6E, 0x63, 0x9C, 0xFF);
-        public static readonly Color Panel = new Color32(0x3E, 0x36, 0x63, 0xE6);
-        public static readonly Color SlotEmpty = new Color32(0x4A, 0x40, 0x72, 0xFF);
-        public static readonly Color SlotRing = new Color32(0xE0, 0x5A, 0x4F, 0xFF);
+        public static readonly Color Background = new Color32(0x6B, 0x63, 0x98, 0xFF);
+        public static readonly Color Cloud = new Color(1f, 1f, 1f, 0.07f);
+        public static readonly Color Panel = new Color32(0x4B, 0x42, 0x7A, 0xFF);
+        public static readonly Color PanelDark = new Color32(0x2E, 0x28, 0x4D, 0xE6);
+        public static readonly Color PillLight = new Color32(0xD8, 0xEC, 0xFF, 0xFF);
+        public static readonly Color PillLightText = new Color32(0x24, 0x3A, 0x6E, 0xFF);
+        public static readonly Color SlotEmpty = new Color32(0x45, 0x3D, 0x6E, 0xFF);
+        public static readonly Color SlotRing = new Color32(0xE8, 0x4A, 0x43, 0xFF);
+        public static readonly Color SlotLocked = new Color32(0x3A, 0x34, 0x5E, 0xFF);
         public static readonly Color TextLight = Color.white;
-        public static readonly Color TextOutline = new Color32(0x2A, 0x22, 0x44, 0xFF);
-        public static readonly Color Combo = new Color32(0xFF, 0xC8, 0x3D, 0xFF);
-        public static readonly Color BoosterBar = new Color32(0x3B, 0x7B, 0xD9, 0xFF);
-        public static readonly Color Badge = new Color32(0xF0, 0x4E, 0x3A, 0xFF);
+        public static readonly Color TextOutline = new Color32(0x22, 0x1C, 0x3A, 0xFF);
+        public static readonly Color Combo = new Color32(0xFF, 0xD2, 0x3D, 0xFF);
+        public static readonly Color BoosterBar = new Color32(0x3E, 0x7B, 0xE0, 0xFF);
+        public static readonly Color BoosterButton = new Color32(0x24, 0x4C, 0xA8, 0xFF);
+        public static readonly Color BoosterRing = new Color32(0x8F, 0xC2, 0xFF, 0xFF);
+        public static readonly Color Badge = new Color32(0xF0, 0x4A, 0x3A, 0xFF);
+        public static readonly Color ButtonGreen = new Color32(0x4C, 0xC9, 0x5A, 0xFF);
+        public static readonly Color ButtonOrange = new Color32(0xFF, 0xA9, 0x2E, 0xFF);
+        public static readonly Color ButtonBlue = new Color32(0x3E, 0x8B, 0xF0, 0xFF);
+        public static readonly Color ButtonGrey = new Color32(0x8A, 0x86, 0xA6, 0xFF);
+        public static readonly Color Dim = new Color(0f, 0f, 0f, 0.6f);
         public static readonly Color Disabled = new Color(1f, 1f, 1f, 0.35f);
+        public static readonly Color QueueBackRow = new Color(0.78f, 0.78f, 0.82f, 1f);
 
         public static Color Of(GameColor color)
         {
             switch (color)
             {
-                case GameColor.White: return new Color32(0xF4, 0xF4, 0xF0, 0xFF);
-                case GameColor.Grey: return new Color32(0x9A, 0xA0, 0xAE, 0xFF);
-                case GameColor.Black: return new Color32(0x2B, 0x2B, 0x33, 0xFF);
-                case GameColor.Orange: return new Color32(0xF3, 0x8A, 0x2E, 0xFF);
-                case GameColor.Brown: return new Color32(0x8A, 0x55, 0x33, 0xFF);
-                case GameColor.Tan: return new Color32(0xE2, 0xB4, 0x86, 0xFF);
-                case GameColor.Pink: return new Color32(0xF4, 0x9C, 0xB7, 0xFF);
-                case GameColor.Yellow: return new Color32(0xFF, 0xD9, 0x3B, 0xFF);
-                case GameColor.Red: return new Color32(0xE2, 0x3A, 0x3A, 0xFF);
-                case GameColor.Cream: return new Color32(0xF7, 0xE7, 0xC6, 0xFF);
+                case GameColor.White: return new Color32(0xF7, 0xF7, 0xF4, 0xFF);
+                case GameColor.Grey: return new Color32(0xA9, 0xB1, 0xD6, 0xFF);
+                case GameColor.Black: return new Color32(0x2A, 0x26, 0x33, 0xFF);
+                case GameColor.Orange: return new Color32(0xFF, 0x8A, 0x1F, 0xFF);
+                case GameColor.Brown: return new Color32(0x8E, 0x4E, 0x2C, 0xFF);
+                case GameColor.Tan: return new Color32(0xF2, 0xB8, 0xA0, 0xFF);
+                case GameColor.Pink: return new Color32(0xF5, 0x3D, 0xC8, 0xFF);
+                case GameColor.Yellow: return new Color32(0xFF, 0xD6, 0x1F, 0xFF);
+                case GameColor.Red: return new Color32(0xE8, 0x2A, 0x3A, 0xFF);
+                case GameColor.Cream: return new Color32(0xFF, 0xEC, 0xC2, 0xFF);
                 default: return Color.magenta;
             }
         }

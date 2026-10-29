@@ -39,6 +39,7 @@ namespace SheepStrike.Presentation.Views
             Clear();
             _model = model;
             transform.localRotation = Quaternion.Euler(0f, 25f, 0f);
+            ScaleAnimator.On(this).PopIn();
             ComputeBounds(model);
 
             foreach (var pair in model.All)
@@ -48,6 +49,13 @@ namespace SheepStrike.Presentation.Views
         }
 
         public Vector3 WorldPositionOf(VoxelPos pos) => transform.TransformPoint(LocalPositionOf(pos));
+
+        /// <summary>Direction towards the camera in voxel coordinates, which share axes with this transform's local space.</summary>
+        public ViewDirection ViewFrom(Camera camera)
+        {
+            var towardsCamera = transform.InverseTransformDirection(-camera.transform.forward);
+            return new ViewDirection(towardsCamera.x, towardsCamera.y, towardsCamera.z);
+        }
 
         /// <summary>Called when a wool ball lands. The domain already removed the voxel; this updates the visuals.</summary>
         public void ResolveHit(VoxelPos pos)

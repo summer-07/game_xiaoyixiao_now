@@ -1,6 +1,7 @@
 using SheepStrike.Infrastructure.Levels;
 using SheepStrike.Infrastructure.Persistence;
 using SheepStrike.Infrastructure.Platform;
+using SheepStrike.Presentation.Audio;
 using SheepStrike.Presentation.Presenters;
 using SheepStrike.Presentation.Theme;
 using SheepStrike.Presentation.Views;
@@ -49,6 +50,8 @@ namespace SheepStrike.Bootstrap
             var debris = CreateChild<DebrisBurst>("Debris");
             debris.Init(kit);
             var rotator = CreateChild<ModelRotator>("ModelRotator");
+            var sound = CreateChild<SoundBoard>("Sound");
+            sound.Init();
 
             UiFactory.EnsureEventSystem();
             var hud = UiFactory.CreateCanvas("Hud", 10).gameObject.AddComponent<HudView>();
@@ -68,7 +71,8 @@ namespace SheepStrike.Bootstrap
                     Rotator = rotator,
                     Projectiles = projectiles,
                     Debris = debris,
-                    Camera = new CameraRig(camera)
+                    Camera = new CameraRig(camera),
+                    Sound = sound
                 });
         }
 
@@ -95,6 +99,7 @@ namespace SheepStrike.Bootstrap
             camera.backgroundColor = Palette.Background;
             camera.fieldOfView = 40f;
             camera.nearClipPlane = 0.1f;
+            if (camera.GetComponent<AudioListener>() == null) camera.gameObject.AddComponent<AudioListener>();
             return camera;
         }
 
@@ -109,13 +114,11 @@ namespace SheepStrike.Bootstrap
 
         private static void CreateBackground(ArtLibrary art, Camera camera)
         {
-            if (art.Background == null) return;
             var canvas = UiFactory.CreateCanvas("Background", -10);
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = camera;
             canvas.planeDistance = 90f;
-            var image = UiFactory.AddImage(UiFactory.Stretch("Sky", canvas.transform), art.Background, Color.white);
-            image.preserveAspect = false;
+            canvas.gameObject.AddComponent<SkyView>().Build(art);
             Object.Destroy(canvas.GetComponent<GraphicRaycaster>());
         }
     }

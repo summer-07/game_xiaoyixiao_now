@@ -4,13 +4,18 @@ using SheepStrike.Domain.Core;
 namespace SheepStrike.Domain.Voxels
 {
     /// <summary>
-    /// The 3D animal the sheep are attacking. A voxel can be hit only while it is exposed,
-    /// i.e. at least one of its six faces touches empty space.
+    /// The 3D animal the sheep are attacking. A voxel is exposed while at least one of its six faces touches
+    /// empty space; once a view is set, it can only be hit while it is also visible from that view.
     /// </summary>
     public sealed class VoxelModel
     {
         private readonly Dictionary<VoxelPos, GameColor> _voxels;
         private readonly Dictionary<GameColor, HashSet<VoxelPos>> _byColor = new Dictionary<GameColor, HashSet<VoxelPos>>();
+        private readonly HashSet<VoxelPos> _visible = new HashSet<VoxelPos>();
+        private readonly VisibleSurface _surface = new VisibleSurface();
+        private readonly List<VoxelPos> _candidates = new List<VoxelPos>();
+        private ViewDirection? _view;
+        private bool _visibilityStale;
 
         public VoxelModel(IReadOnlyDictionary<VoxelPos, GameColor> voxels)
         {
@@ -64,6 +69,43 @@ namespace SheepStrike.Domain.Voxels
 
         public bool HasExposed(GameColor color) => TryFindExposed(color, out _);
 
+        public void SetView(ViewDirection view)
+        {
+            _view = view;
+            _visibilityStale = true;
+        }
+
+        /// <summary>
+        /// Recomputes what the viewer sees, if anything changed. Called once per tick rather than per shot,
+        /// so a voxel uncovered mid-tick becomes a target on the next tick.
+        /// </summary>
+        public void RefreshVisibility()
+        {
+            if (!_view.HasValue || !_visibilityStale) return;
+            _surface.Compute(_voxels.Keys, _view.Value, _visible);
+            _visibilityStale = false;
+        }
+
+        /// <summary>
+        /// Picks a random voxel of <paramref name="color"/> among those the viewer can see, so the animal
+        /// crumbles all over instead of being peeled in a fixed order. Without a view, every exposed voxel counts.
+        /// </summary>
+        public bool TryFindVisible(GameColor color, IRandom random, out VoxelPos target)
+        {
+            target = default;
+            if (!_byColor.TryGetValue(color, out var all)) return false;
+
+            _candidates.Clear();
+            foreach (var pos in all)
+            {
+                if (IsExposed(pos) && (!_view.HasValue || _visible.Contains(pos))) _candidates.Add(pos);
+            }
+            if (_candidates.Count == 0) return false;
+
+            target = _candidates[random.Next(_candidates.Count)];
+            return true;
+        }
+
         /// <summary>
         /// Picks the exposed voxel of <paramref name="color"/> that the sheep should hit next.
         /// The model is peeled top-down, then front-to-back, so destruction reads clearly on screen.
@@ -100,6 +142,8 @@ namespace SheepStrike.Domain.Voxels
             }
             _voxels.Remove(pos);
             _byColor[color].Remove(pos);
+            _visible.Remove(pos);
+            _visibilityStale = true;
             return true;
         }
 

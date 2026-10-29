@@ -21,6 +21,20 @@ namespace SheepStrike.Tests
             }, slots, timeLimit);
         }
 
+        /// <summary>A white voxel in front of a black one (front = lowest Z), one sheep of each colour.</summary>
+        public static LevelDefinition TwoVoxelsDeep()
+        {
+            var voxels = new VoxelModelBuilder()
+                .Box(0, 0, 0, 1, 1, 1, GameColor.White)
+                .Box(0, 0, 1, 1, 1, 1, GameColor.Black)
+                .Build();
+            return Wrap(voxels, new[]
+            {
+                new[] { new SheepSpec(GameColor.White, 1) },
+                new[] { new SheepSpec(GameColor.Black, 1) }
+            }, 2, 60f);
+        }
+
         /// <summary>A 3x3x3 white cube with a black core: the core is hidden until the shell is gone.</summary>
         public static LevelDefinition HiddenCore(int slots)
         {

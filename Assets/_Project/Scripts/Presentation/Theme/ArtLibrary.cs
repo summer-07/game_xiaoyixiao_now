@@ -17,9 +17,23 @@ namespace SheepStrike.Presentation.Theme
         {
             // Put a TTF with Chinese glyphs at Resources/Fonts/GameFont.ttf; WebGL has no system font fallback.
             Font = Resources.Load<Font>("Fonts/GameFont") ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            BevelBox = ShapeSprites.BevelBox();
+            FlatBox = ShapeSprites.FlatBox();
+            Disc = ShapeSprites.Disc();
+            Ring = ShapeSprites.Ring();
         }
 
         public Font Font { get; }
+
+        /// <summary>9-sliced rounded box with a darker bottom lip, for chunky buttons.</summary>
+        public Sprite BevelBox { get; }
+
+        /// <summary>9-sliced rounded box, for pills and panels.</summary>
+        public Sprite FlatBox { get; }
+
+        public Sprite Disc { get; }
+
+        public Sprite Ring { get; }
 
         public Sprite SheepIcon => Load("Icons/sheep_shooter");
         public Sprite SlotRing => Load("UI/slot_ring");

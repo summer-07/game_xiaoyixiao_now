@@ -59,8 +59,9 @@ Assets/_Project/
 ## 发布到小游戏
 
 1. 切换平台到 WebGL。
-2. **中文字体**：WebGL 没有系统字体可以回退，要把含中文的字体子集放到
-   `Assets/_Project/Resources/Fonts/GameFont.ttf`（例如思源黑体子集）。不放的话，中文在真机上不显示。
+2. **中文字体**：项目已自带 `Assets/_Project/Resources/Fonts/GameFont.ttf`（站酷快乐体子集，SIL OFL 1.1，
+   许可证见同目录 `GameFont-OFL.txt`）。新增文案后用 `python3 Tools/subset_font.py <完整字体.ttf>` 重新生成子集，
+   否则新字在真机上不显示。
 3. 微信：导入 [minigame-unity-webgl-transform](https://github.com/wechat-miniprogram/minigame-unity-webgl-transform)
    （SDK 会定义 `WEIXINMINIGAME`），在 `PlatformIds` 里填激励视频广告位 ID，然后用“微信小游戏 ▸ 转换小游戏”构建。
 4. 抖音：导入抖音 Unity SDK，在 Scripting Define Symbols 里加上 `DOUYINMINIGAME`。

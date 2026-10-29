@@ -10,5 +10,9 @@ namespace SheepStrike.Domain.Levels
         public int MaxSlots = 7;
         public float TimeLimitSeconds = 240f;
         public float FireIntervalSeconds = 0.09f;
+
+        /// <summary>Surface colours reused to paint the hidden interior; 0 keeps the interior as built.</summary>
+        public int InteriorPaletteSize = 2;
+        public int InteriorShellThickness = 2;
     }
 }

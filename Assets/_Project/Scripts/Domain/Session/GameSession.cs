@@ -15,6 +15,9 @@ namespace SheepStrike.Domain.Session
         public const float RamChargeDurationSeconds = 10f;
         public const float ComboWindowSeconds = 1.2f;
 
+        /// <summary>A deployed sheep has to walk from the queue into the pen before it can fire.</summary>
+        public const float DeployTravelSeconds = 0.4f;
+
         private readonly IRandom _random;
         private readonly float[] _cooldowns;
         private readonly List<GameEvent> _events = new List<GameEvent>();
@@ -51,6 +54,9 @@ namespace SheepStrike.Domain.Session
             return drained;
         }
 
+        /// <summary>Where the player is looking from; sheep only shoot voxels visible from here.</summary>
+        public void SetView(ViewDirection view) => Model.SetView(view);
+
         /// <summary>Tap on a sheep. Only the front row is allowed unless the shepherd dog is active.</summary>
         public bool TryDeploy(int column, int row)
         {
@@ -65,7 +71,7 @@ namespace SheepStrike.Domain.Session
 
             var sheep = Queue.Take(column, row);
             Pad.TryPlace(sheep, out int slot);
-            _cooldowns[slot] = 0f;
+            _cooldowns[slot] = DeployTravelSeconds;
             if (row != 0) IsShepherdDogActive = false;
             _events.Add(new SheepDeployed(sheep.Id, column, row, slot));
             return true;
@@ -119,6 +125,7 @@ namespace SheepStrike.Domain.Session
             TimeLeft -= deltaSeconds;
             if (_ramChargeLeft > 0f) _ramChargeLeft -= deltaSeconds;
 
+            Model.RefreshVisibility();
             bool hitThisTick = FireAllSlots(deltaSeconds);
             UpdateCombo(deltaSeconds, hitThisTick);
             ResolveOutcome();
@@ -135,7 +142,7 @@ namespace SheepStrike.Domain.Session
                 if (sheep == null) continue;
 
                 _cooldowns[slot] -= deltaSeconds;
-                while (_cooldowns[slot] <= 0f && !sheep.IsEmpty && Model.TryFindExposed(sheep.Color, out var target))
+                while (_cooldowns[slot] <= 0f && !sheep.IsEmpty && Model.TryFindVisible(sheep.Color, _random, out var target))
                 {
                     Model.Remove(target);
                     sheep.ConsumeOne();

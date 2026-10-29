@@ -7,6 +7,22 @@ namespace SheepStrike.Tests
 {
     public class GameSessionTests
     {
+        private const float AfterTravel = GameSession.DeployTravelSeconds + 0.016f;
+
+        [Test]
+        public void DeployedSheep_HoldsFire_UntilItReachesThePen()
+        {
+            var session = new GameSession(TestLevels.TwoVoxels(), new SeededRandom(1));
+            session.TryDeploy(0, 0);
+            session.DrainEvents();
+
+            session.Tick(GameSession.DeployTravelSeconds * 0.5f);
+            Assert.IsFalse(session.DrainEvents().OfType<WoolFired>().Any());
+
+            session.Tick(GameSession.DeployTravelSeconds * 0.5f + 0.016f);
+            Assert.AreEqual(1, session.DrainEvents().OfType<WoolFired>().Count());
+        }
+
         [Test]
         public void DeployingBothSheep_ClearsModel_AndWins()
         {
@@ -14,7 +30,7 @@ namespace SheepStrike.Tests
 
             Assert.IsTrue(session.TryDeploy(0, 0));
             Assert.IsTrue(session.TryDeploy(1, 0));
-            session.Tick(0.016f);
+            session.Tick(AfterTravel);
 
             Assert.AreEqual(SessionState.Won, session.State);
             Assert.AreEqual(2, session.DrainEvents().OfType<WoolFired>().Count());
@@ -26,7 +42,7 @@ namespace SheepStrike.Tests
             var session = new GameSession(TestLevels.TwoVoxels(), new SeededRandom(1));
 
             session.TryDeploy(0, 0);
-            session.Tick(0.016f);
+            session.Tick(AfterTravel);
 
             Assert.IsNull(session.Pad.At(0));
             Assert.IsTrue(session.DrainEvents().OfType<SheepRetired>().Any());
@@ -85,9 +101,10 @@ namespace SheepStrike.Tests
             session.Apply(BoosterType.RamCharge);
             session.DrainEvents();
 
+            session.Tick(GameSession.DeployTravelSeconds);
             session.Tick(0.18f);
 
-            // first shot is immediate, then one every 0.05s instead of 0.1s
+            // first shot as the sheep lands, then one every 0.05s instead of 0.1s
             Assert.AreEqual(4, session.DrainEvents().OfType<WoolFired>().Count());
         }
     }

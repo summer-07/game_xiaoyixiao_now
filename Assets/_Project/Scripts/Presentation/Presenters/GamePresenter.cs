@@ -1,4 +1,5 @@
 using SheepStrike.Domain.Session;
+using SheepStrike.Presentation.Audio;
 using SheepStrike.Presentation.Theme;
 using SheepStrike.Presentation.Views;
 using SheepStrike.UseCases.Interactors;
@@ -23,6 +24,7 @@ namespace SheepStrike.Presentation.Presenters
             public WoolProjectiles Projectiles;
             public DebrisBurst Debris;
             public CameraRig Camera;
+            public SoundBoard Sound;
         }
 
         private readonly PlayContext _context;
@@ -35,6 +37,7 @@ namespace SheepStrike.Presentation.Presenters
 
         private int _nextLevel;
         private float _resultDelay = -1f;
+        private int _comboTier;
 
         public GamePresenter(
             PlayContext context,
@@ -54,6 +57,7 @@ namespace SheepStrike.Presentation.Presenters
             _views = views;
 
             var hud = views.Hud;
+            hud.ButtonPressed = views.Sound.Tap;
             hud.SheepTapped = OnSheepTapped;
             hud.BoosterTapped = OnBoosterTapped;
             hud.NextTapped = () => Begin(_nextLevel);
@@ -77,6 +81,7 @@ namespace SheepStrike.Presentation.Presenters
         {
             if (Session == null) return;
 
+            Session.SetView(_views.Model.ViewFrom(_views.Camera.Camera));
             Session.Tick(deltaSeconds);
             foreach (var gameEvent in Session.DrainEvents()) Handle(gameEvent);
 
@@ -95,11 +100,13 @@ namespace SheepStrike.Presentation.Presenters
         {
             _views.Projectiles.CompleteAll();
             _resultDelay = -1f;
+            _comboTier = 0;
 
             var hud = _views.Hud;
             hud.HideOverlays();
+            hud.Flights.CancelAll();
             hud.SetLevel(session.Level.Number, session.Level.TargetId);
-            hud.SetCombo(0);
+            hud.SetCombo(0, 0);
             hud.Queue.Build(session.Queue.ColumnCount);
             hud.Slots.ClearAll();
             RefreshQueueAndPad();
@@ -116,6 +123,7 @@ namespace SheepStrike.Presentation.Presenters
             if (_deploySheep.Execute(column, row)) return;
 
             if (Session.State != SessionState.Playing) return;
+            _views.Sound.Denied();
             _views.Hud.Toast(Session.Pad.IsFull ? Texts.PadFull : Texts.FrontOnly);
         }
 
@@ -134,8 +142,7 @@ namespace SheepStrike.Presentation.Presenters
             switch (gameEvent)
             {
                 case SheepDeployed deployed:
-                    var sheep = Session.Pad.At(deployed.Slot);
-                    if (sheep != null) _views.Hud.Slots.SetSheep(deployed.Slot, sheep.Color, sheep.Ammo);
+                    HopIntoPen(deployed);
                     RefreshQueueAndPad();
                     RefreshBoosters();
                     break;
@@ -149,10 +156,11 @@ namespace SheepStrike.Presentation.Presenters
                     break;
 
                 case ComboChanged combo:
-                    _views.Hud.SetCombo(combo.Combo);
+                    OnComboChanged(combo.Combo);
                     break;
 
                 case BoosterApplied applied:
+                    _views.Sound.Booster();
                     _views.Hud.Toast(applied.Booster == BoosterType.ShepherdDog ? Texts.DogReady : Texts.Booster(applied.Booster) + "！");
                     if (applied.Booster == BoosterType.ExtraPen) _views.Hud.HideOverlays();
                     RefreshQueueAndPad();
@@ -165,15 +173,53 @@ namespace SheepStrike.Presentation.Presenters
             }
         }
 
+        /// <summary>The sheep leaves its queue cell and hops into the pen; it shows in the slot only once it lands.</summary>
+        private void HopIntoPen(SheepDeployed deployed)
+        {
+            var sheep = Session.Pad.At(deployed.Slot);
+            if (sheep == null) return;
+
+            var hud = _views.Hud;
+            var hop = new DeployFlightView.Hop
+            {
+                FromScreen = hud.Queue.ScreenPositionOf(deployed.Column, Mathf.Min(deployed.Row, SheepQueueView.VisibleRows - 1)),
+                ToScreen = hud.Slots.ScreenPositionOf(deployed.Slot),
+                FromSize = hud.Queue.CellSize,
+                ToSize = hud.Slots.SheepSize,
+                Seconds = GameSession.DeployTravelSeconds
+            };
+            _views.Sound.Hop();
+            hud.Flights.Fly(hop, Palette.Of(sheep.Color), sheep.Ammo, () =>
+            {
+                hud.Slots.SetSheep(deployed.Slot, sheep.Color, sheep.Ammo);
+                _views.Sound.Land();
+            });
+        }
+
+        private void OnComboChanged(int combo)
+        {
+            int tier = ComboTier.Of(combo);
+            if (tier > _comboTier)
+            {
+                _views.Hud.ComboFx.Celebrate(tier);
+                _views.Sound.Fanfare(tier);
+            }
+            _comboTier = tier;
+            _views.Hud.SetCombo(combo, tier);
+        }
+
         private void LaunchWool(WoolFired fired)
         {
             var target = fired.Target;
             var origin = _views.Camera.ScreenToWorld(_views.Hud.Slots.ScreenPositionOf(fired.Slot), _views.Camera.Distance - _views.Model.Radius);
             _views.Hud.Slots.SetAmmo(fired.Slot, fired.AmmoLeft);
+            _views.Sound.Fire();
+            int tier = _comboTier;
             _views.Projectiles.Launch(origin, () => _views.Model.WorldPositionOf(target), fired.Color, () =>
             {
-                _views.Debris.Emit(_views.Model.WorldPositionOf(target), fired.Color);
+                _views.Debris.Emit(_views.Model.WorldPositionOf(target), fired.Color, tier);
                 _views.Model.ResolveHit(target);
+                _views.Sound.Hit(tier);
             });
         }
 
@@ -201,6 +247,8 @@ namespace SheepStrike.Presentation.Presenters
             string animal = Texts.Animal(Session.Level.TargetId);
             bool won = Session.State == SessionState.Won;
             _views.Hud.ShowResult(won, won ? Texts.Won(animal, Session.BestCombo) : Texts.Lost(animal));
+            if (won) _views.Sound.Win();
+            else _views.Sound.Lose();
             if (won) _platform.VibrateShort();
         }
 

@@ -10,6 +10,9 @@ namespace SheepStrike.Presentation.Views
     public static class UiFactory
     {
         public static readonly Vector2 ReferenceResolution = new Vector2(1080f, 1920f);
+        private const float TextOutlineRatio = 0.07f;
+        private const float ButtonTextRatio = 0.42f;
+        private const float ButtonLipOffset = 10f;
 
         public static Canvas CreateCanvas(string name, int sortingOrder)
         {
@@ -52,6 +55,15 @@ namespace SheepStrike.Presentation.Views
             return rect;
         }
 
+        /// <summary>A 9-sliced rounded panel or pill.</summary>
+        public static Image AddBox(RectTransform rect, Sprite box, Color color, bool raycast = false)
+        {
+            var image = AddImage(rect, box, color, raycast);
+            image.type = Image.Type.Sliced;
+            image.preserveAspect = false;
+            return image;
+        }
+
         public static Image AddImage(RectTransform rect, Sprite sprite, Color color, bool raycast = false)
         {
             var image = rect.gameObject.AddComponent<Image>();
@@ -72,9 +84,7 @@ namespace SheepStrike.Presentation.Views
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             text.raycastTarget = false;
-            var outline = rect.gameObject.AddComponent<Outline>();
-            outline.effectColor = Palette.TextOutline;
-            outline.effectDistance = new Vector2(3f, -3f);
+            AddOutline(rect.gameObject, Mathf.Max(2f, size * TextOutlineRatio));
             return text;
         }
 
@@ -83,18 +93,33 @@ namespace SheepStrike.Presentation.Views
             if (rect.GetComponent<Graphic>() == null) AddImage(rect, null, new Color(1f, 1f, 1f, 0f));
             rect.GetComponent<Graphic>().raycastTarget = true;
             var button = rect.gameObject.AddComponent<Button>();
-            button.transition = Selectable.Transition.ColorTint;
+            button.transition = Selectable.Transition.None;
             button.onClick.AddListener(() => onClick());
+            rect.gameObject.AddComponent<PressFeedback>();
             return button;
         }
 
-        public static Button TextButton(Transform parent, string name, Vector2 position, Vector2 size, Font font, string label, Color color, Action onClick)
+        /// <summary>Chunky rounded button with a darker bottom lip, like a toy key.</summary>
+        public static Button TextButton(Transform parent, string name, Vector2 position, Vector2 size, ArtLibrary art, string label, Color color, Action onClick)
         {
             var rect = Rect(name, parent, new Vector2(0.5f, 0.5f), position, size);
-            AddImage(rect, null, color, true);
-            var text = AddLabel(Stretch("Label", rect), font, 52, TextAnchor.MiddleCenter);
+            AddBox(rect, art.BevelBox, color, true);
+            var labelRect = Stretch("Label", rect);
+            labelRect.offsetMin = new Vector2(0f, ButtonLipOffset);
+            var text = AddLabel(labelRect, art.Font, Mathf.RoundToInt(size.y * ButtonTextRatio), TextAnchor.MiddleCenter);
             text.text = label;
             return AddButton(rect, onClick);
+        }
+
+        /// <summary>Two offset outlines make the thick dark rim cartoon games put around white text.</summary>
+        private static void AddOutline(GameObject go, float distance)
+        {
+            var outer = go.AddComponent<Outline>();
+            outer.effectColor = Palette.TextOutline;
+            outer.effectDistance = new Vector2(distance, -distance);
+            var inner = go.AddComponent<Outline>();
+            inner.effectColor = Palette.TextOutline;
+            inner.effectDistance = new Vector2(distance * 0.5f, distance * 0.5f);
         }
     }
 }

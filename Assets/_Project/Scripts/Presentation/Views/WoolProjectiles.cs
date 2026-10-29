@@ -6,14 +6,15 @@ using UnityEngine;
 
 namespace SheepStrike.Presentation.Views
 {
-    /// <summary>Pooled wool balls flying on an arc from a launch slot to a voxel, leaving a coloured trail.</summary>
+    /// <summary>Pooled wool balls flying on an arc from a launch slot to a voxel, leaving a glowing, mostly white tracer.</summary>
     public sealed class WoolProjectiles : MonoBehaviour
     {
         private const float FlightSeconds = 0.38f;
         private const float ArcHeight = 0.9f;
         private const float BallSize = 0.22f;
         private const float TrailSeconds = 0.3f;
-        private const float TrailStartAlpha = 0.85f;
+        private const float TrailStartAlpha = 0.9f;
+        private const float TrailWhiteness = 0.65f;
 
         private sealed class Flight
         {
@@ -80,7 +81,8 @@ namespace SheepStrike.Presentation.Views
         /// <remarks>Clearing after the ball moves to its launch point stops a pooled ball drawing a streak from where it last landed.</remarks>
         private static void ResetTrail(TrailRenderer trail, Color color)
         {
-            trail.startColor = new Color(color.r, color.g, color.b, TrailStartAlpha);
+            var glow = Color.Lerp(color, Color.white, TrailWhiteness);
+            trail.startColor = new Color(glow.r, glow.g, glow.b, TrailStartAlpha);
             trail.endColor = new Color(color.r, color.g, color.b, 0f);
             trail.Clear();
         }

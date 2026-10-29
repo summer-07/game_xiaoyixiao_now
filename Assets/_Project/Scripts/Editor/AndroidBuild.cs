@@ -44,8 +44,16 @@ namespace SheepStrike.EditorTools
             AssetDatabase.Refresh();
             if (EditorApplication.isCompiling || EditorApplication.isUpdating) return;
 
+            // Build right here: a delayCall can be dropped by a domain reload, which silently lost a request before.
             File.Delete(RequestPath);
-            EditorApplication.delayCall += BuildApk;
+            try
+            {
+                BuildApk();
+            }
+            catch (System.Exception e)
+            {
+                File.WriteAllText(ResultPath, $"{System.DateTime.Now:yyyy-MM-dd HH:mm:ss} [SheepStrike] Android build crashed: {e}\n");
+            }
         }
 
         [MenuItem("SheepStrike/Build Android APK")]

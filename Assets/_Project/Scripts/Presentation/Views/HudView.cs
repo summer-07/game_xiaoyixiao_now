@@ -12,8 +12,13 @@ namespace SheepStrike.Presentation.Views
     /// </summary>
     public sealed class HudView : MonoBehaviour
     {
-        private const float TopBarHeight = 230f;
-        private const float PillsX = 265f;
+        private const float TopBarHeight = 190f;
+        private const float LevelPillX = 250f;
+        private const float QueueBottom = BoosterBarView.Height + 40f;
+        private const float SlotsBottom = QueueBottom + SheepQueueView.VisibleRows * 180f + 50f;
+
+        /// <summary>The timer stands on the left above the pen's upper-left slot, like the reference, keeping the top bar light.</summary>
+        private static readonly Vector2 TimerPosition = new Vector2(120f, SlotsBottom + 420f);
 
         /// <summary>The home screen puts its gear at the same spot, so it doesn't jump when a level starts.</summary>
         public const float GearSize = 96f;
@@ -59,6 +64,7 @@ namespace SheepStrike.Presentation.Views
         private Text _toast;
         private Image _toastPill;
         private GameObject _settingsButton;
+        private GameObject _timerGroup;
         private float _toastLeft;
         private RectTransform _resultPanel;
         private Text _resultText;
@@ -78,8 +84,8 @@ namespace SheepStrike.Presentation.Views
 
             BuildTopBar(root);
             Boosters = new BoosterBarView(root, art, b => BoosterTapped?.Invoke(b));
-            Queue = new SheepQueueView(root, BoosterBarView.Height + 40f, art, (c, r) => SheepTapped?.Invoke(c, r));
-            Slots = new SlotRowView(root, BoosterBarView.Height + 40f + SheepQueueView.VisibleRows * 180f + 50f, art, maxSlots,
+            Queue = new SheepQueueView(root, QueueBottom, art, (c, r) => SheepTapped?.Invoke(c, r));
+            Slots = new SlotRowView(root, SlotsBottom, art, maxSlots,
                 () => BoosterTapped?.Invoke(BoosterType.ExtraPen));
 
             _combo = UiFactory.AddLabel(UiFactory.Rect("Combo", root, new Vector2(0.5f, 1f), new Vector2(190f, -TopBarHeight - 70f), new Vector2(560f, 110f)), art.Font, 84, TextAnchor.MiddleCenter, Palette.Combo);
@@ -100,6 +106,7 @@ namespace SheepStrike.Presentation.Views
         {
             _topBar.gameObject.SetActive(visible);
             _settingsButton.SetActive(visible);
+            _timerGroup.SetActive(visible);
             Slots.Root.gameObject.SetActive(visible);
             Queue.Root.gameObject.SetActive(visible);
             Boosters.Root.gameObject.SetActive(visible);
@@ -197,22 +204,28 @@ namespace SheepStrike.Presentation.Views
             _topBar = UiFactory.Rect("TopBar", root, new Vector2(0.5f, 1f), new Vector2(0f, -TopBarHeight * 0.5f), new Vector2(1080f, TopBarHeight));
             BuildSettingsButton();
 
-            var levelPill = UiFactory.Rect("LevelPill", _topBar, new Vector2(0f, 0.5f), new Vector2(PillsX, 40f), new Vector2(250f, 90f));
+            var levelPill = UiFactory.Rect("LevelPill", _topBar, new Vector2(0f, 1f), new Vector2(LevelPillX, GearPosition.y), new Vector2(210f, 84f));
             UiFactory.AddBox(levelPill, _art.FlatBox, Palette.PanelDark);
-            _level = UiFactory.AddLabel(UiFactory.Stretch("Level", levelPill), _art.Font, 52, TextAnchor.MiddleCenter);
+            _level = UiFactory.AddLabel(UiFactory.Stretch("Level", levelPill), _art.Font, 48, TextAnchor.MiddleCenter);
 
-            var timerPill = UiFactory.Rect("TimerPill", _topBar, new Vector2(0f, 0.5f), new Vector2(PillsX, -48f), new Vector2(190f, 64f));
-            UiFactory.AddBox(timerPill, _art.FlatBox, Palette.PillLight);
-            _timer = UiFactory.AddLabel(UiFactory.Stretch("Timer", timerPill), _art.Font, 42, TextAnchor.MiddleCenter);
-
-            var hint = UiFactory.AddLabel(UiFactory.Rect("RotateHint", _topBar, new Vector2(0f, 0.5f), new Vector2(PillsX, -110f), new Vector2(260f, 44f)), _art.Font, 32, TextAnchor.MiddleCenter);
-            hint.text = Texts.RotateHint;
-
-            var targetRect = UiFactory.Rect("TargetIcon", _topBar, new Vector2(0.5f, 0.5f), new Vector2(0f, 24f), new Vector2(140f, 140f));
+            var targetRect = UiFactory.Rect("TargetIcon", _topBar, new Vector2(0.5f, 1f), new Vector2(0f, -70f), new Vector2(120f, 120f));
             _targetIcon = UiFactory.AddImage(targetRect, null, Color.white);
-            _target = UiFactory.AddLabel(UiFactory.Rect("Target", _topBar, new Vector2(0.5f, 0.5f), new Vector2(0f, -72f), new Vector2(400f, 54f)), _art.Font, 40, TextAnchor.MiddleCenter);
+            _target = UiFactory.AddLabel(UiFactory.Rect("Target", _topBar, new Vector2(0.5f, 1f), new Vector2(0f, -152f), new Vector2(400f, 50f)), _art.Font, 38, TextAnchor.MiddleCenter);
+            BuildTimer(root);
 
             BuildRemainingPill();
+        }
+
+        private void BuildTimer(RectTransform root)
+        {
+            var group = UiFactory.Rect("Timer", root, new Vector2(0f, 0f), TimerPosition, new Vector2(200f, 120f));
+            var pill = UiFactory.Rect("Pill", group, new Vector2(0.5f, 1f), new Vector2(0f, -32f), new Vector2(190f, 64f));
+            UiFactory.AddBox(pill, _art.BevelBox, Palette.PillLight);
+            _timer = UiFactory.AddLabel(UiFactory.Stretch("Time", pill), _art.Font, 44, TextAnchor.MiddleCenter, Palette.PillLightText);
+            RemoveOutlines(_timer);
+            var hint = UiFactory.AddLabel(UiFactory.Rect("RotateHint", group, new Vector2(0.5f, 0f), new Vector2(0f, 22f), new Vector2(220f, 44f)), _art.Font, 32, TextAnchor.MiddleCenter);
+            hint.text = Texts.RotateHint;
+            _timerGroup = group.gameObject;
         }
 
         private void BuildSettingsButton()
@@ -227,7 +240,7 @@ namespace SheepStrike.Presentation.Views
 
         private void BuildRemainingPill()
         {
-            var pill = UiFactory.Rect("RemainingPill", _topBar, new Vector2(1f, 0.5f), new Vector2(-170f, 30f), new Vector2(260f, 120f));
+            var pill = UiFactory.Rect("RemainingPill", _topBar, new Vector2(1f, 1f), new Vector2(-160f, GearPosition.y), new Vector2(240f, 110f));
             UiFactory.AddBox(pill, _art.BevelBox, Palette.PillLight);
             var caption = UiFactory.AddLabel(UiFactory.Rect("Caption", pill, new Vector2(0.5f, 1f), new Vector2(0f, -30f), new Vector2(260f, 40f)), _art.Font, 30, TextAnchor.MiddleCenter, Palette.PillLightText);
             RemoveOutlines(caption);

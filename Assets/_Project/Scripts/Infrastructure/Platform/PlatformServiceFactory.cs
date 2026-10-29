@@ -11,7 +11,7 @@ namespace SheepStrike.Infrastructure.Platform
             return new WeChatPlatformService();
 #elif DOUYINMINIGAME && !UNITY_EDITOR
             return new DouyinPlatformService();
-#elif UNITY_ANDROID && !UNITY_EDITOR
+#elif UNITY_ANDROID && !UNITY_EDITOR && !DOUYINMINIGAME && !WEIXINMINIGAME
             return new AndroidPlatformService();
 #else
             return new EditorPlatformService();

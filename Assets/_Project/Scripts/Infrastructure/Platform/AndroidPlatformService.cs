@@ -1,4 +1,5 @@
-#if UNITY_ANDROID
+// Plain APK only: Douyin's native scheme forbids any Java/JNI call and scans for it, so mini-game builds exclude this file.
+#if UNITY_ANDROID && !DOUYINMINIGAME && !WEIXINMINIGAME
 using System;
 using SheepStrike.UseCases.Ports;
 using UnityEngine;

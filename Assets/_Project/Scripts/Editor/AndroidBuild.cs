@@ -7,13 +7,46 @@ namespace SheepStrike.EditorTools
 {
     /// <summary>
     /// One-click Android test build, for trying the game on a phone before the mini-game converters are wired.
-    /// IL2CPP + ARM64 so it installs on current 64-bit-only phones. Also callable from the command line:
-    /// Unity -batchmode -quit -projectPath . -executeMethod SheepStrike.EditorTools.AndroidBuild.BuildApk
+    /// IL2CPP + ARM64 so it installs on current 64-bit-only phones.
+    /// Batch mode can't use the Hub sign-in licence, so builds run in the open editor: from the menu, or by
+    /// creating ../build/build-request.txt, which the editor picks up, refreshes, compiles and builds, writing
+    /// the outcome to ../build/build-result.txt. That lets a remote session ask for an APK without touching the UI.
     /// </summary>
+    [InitializeOnLoad]
     public static class AndroidBuild
     {
         private const string ApplicationId = "com.summer07.sheepstrike";
         private const string OutputPath = "../build/SheepStrike.apk";
+        private const string RequestPath = "../build/build-request.txt";
+        private const string ResultPath = "../build/build-result.txt";
+        private const double PollSeconds = 2.0;
+
+        private static double _nextPoll;
+
+        static AndroidBuild()
+        {
+            EditorApplication.update += PollForRequest;
+        }
+
+        private static void PollForRequest()
+        {
+            if (EditorApplication.timeSinceStartup < _nextPoll) return;
+            _nextPoll = EditorApplication.timeSinceStartup + PollSeconds;
+            if (!File.Exists(RequestPath)) return;
+
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                EditorApplication.isPlaying = false;
+                return;
+            }
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating) return;
+
+            AssetDatabase.Refresh();
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating) return;
+
+            File.Delete(RequestPath);
+            EditorApplication.delayCall += BuildApk;
+        }
 
         [MenuItem("SheepStrike/Build Android APK")]
         public static void BuildApk()
@@ -30,7 +63,9 @@ namespace SheepStrike.EditorTools
             };
             var report = BuildPipeline.BuildPlayer(options);
             var summary = report.summary;
-            Debug.Log($"[SheepStrike] Android build {summary.result}: {Path.GetFullPath(OutputPath)} ({summary.totalSize / (1024 * 1024)} MB, {summary.totalErrors} errors)");
+            string message = $"[SheepStrike] Android build {summary.result}: {Path.GetFullPath(OutputPath)} ({summary.totalErrors} errors, {summary.totalTime.TotalSeconds:0}s)";
+            Debug.Log(message);
+            File.WriteAllText(ResultPath, $"{System.DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}\n");
 
             if (Application.isBatchMode) EditorApplication.Exit(summary.result == BuildResult.Succeeded ? 0 : 1);
         }

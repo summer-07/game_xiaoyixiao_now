@@ -1,0 +1,17 @@
+{
+    "name": "SheepStrike.Infrastructure",
+    "rootNamespace": "SheepStrike.Infrastructure",
+    "references": [
+        "SheepStrike.Domain",
+        "SheepStrike.UseCases"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

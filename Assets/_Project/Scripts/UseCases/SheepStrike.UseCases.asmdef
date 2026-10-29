@@ -1,0 +1,16 @@
+{
+    "name": "SheepStrike.UseCases",
+    "rootNamespace": "SheepStrike.UseCases",
+    "references": [
+        "SheepStrike.Domain"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

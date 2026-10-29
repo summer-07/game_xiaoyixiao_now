@@ -1,0 +1,20 @@
+{
+    "name": "SheepStrike.Bootstrap",
+    "rootNamespace": "SheepStrike.Bootstrap",
+    "references": [
+        "SheepStrike.Domain",
+        "SheepStrike.UseCases",
+        "SheepStrike.Infrastructure",
+        "SheepStrike.Presentation",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

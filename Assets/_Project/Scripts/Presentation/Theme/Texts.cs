@@ -1,0 +1,61 @@
+using SheepStrike.Domain.Session;
+using UnityEngine;
+
+namespace SheepStrike.Presentation.Theme
+{
+    /// <summary>All player-facing Chinese copy in one place.</summary>
+    public static class Texts
+    {
+        public const string GameTitle = "羊羊大反击";
+        public const string Next = "下一关";
+        public const string Retry = "再来一次";
+        public const string Share = "叫朋友来帮忙";
+        public const string GiveUp = "放弃";
+        public const string StuckTitle = "羊圈挤满啦！";
+        public const string StuckBody = "场上的羊都打不到目标\n扩建羊圈继续战斗？";
+        public const string Rescue = "看视频扩羊圈";
+        public const string NotNow = "现在用不了哦";
+        public const string AdNotFinished = "看完视频才能获得奖励";
+        public const string PadFull = "羊圈满了，先等等";
+        public const string FrontOnly = "只能派出最前排的羊";
+        public const string DogReady = "牧羊犬就位：可以派出任意一只羊";
+        public const string RotateHint = "拖动旋转";
+
+        public static string Level(int number) => $"第 {number} 关";
+        public static string Remaining(int count) => $"剩余 {count}";
+        public static string Combo(int combo) => $"连击 x{combo}";
+        public static string Timer(float seconds)
+        {
+            int total = Mathf.CeilToInt(Mathf.Max(0f, seconds));
+            return $"{total / 60:00}:{total % 60:00}";
+        }
+
+        public static string Won(string animal, int bestCombo) => $"胜利！\n{animal}被羊群赶跑了\n最高连击 {bestCombo}";
+        public static string Lost(string animal) => $"失败了…\n{animal}还在虎视眈眈";
+
+        public static string Animal(string targetId)
+        {
+            switch (targetId)
+            {
+                case "wolf": return "大灰狼";
+                case "fox": return "狡猾狐狸";
+                case "bear": return "贪吃棕熊";
+                case "boar": return "野猪大王";
+                case "alpha_wolf": return "狼王";
+                default: return targetId;
+            }
+        }
+
+        public static string Booster(BoosterType booster)
+        {
+            switch (booster)
+            {
+                case BoosterType.RamCharge: return "羊角冲锋";
+                case BoosterType.ExtraPen: return "扩羊圈";
+                case BoosterType.ShepherdDog: return "牧羊犬";
+                case BoosterType.Shuffle: return "赶羊群";
+                default: return booster.ToString();
+            }
+        }
+    }
+}

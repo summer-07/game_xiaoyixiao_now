@@ -88,6 +88,37 @@ namespace SheepStrike.Tests
         }
 
         [Test]
+        public void OuterVoxels_AreHitAboutSevenTimesInTen_InnerOnesTheRest()
+        {
+            var picks = 0;
+            var inner = 0;
+            for (int seed = 0; seed < 400; seed++)
+            {
+                var model = new VoxelModelBuilder().Box(0, 0, 0, 3, 3, 3, GameColor.Red).Build();
+                model.Remove(new VoxelPos(1, 1, 0)); // opens the front face onto the core
+                model.SetView(FromFront);
+                model.RefreshVisibility();
+
+                Assert.IsTrue(model.TryFindVisible(GameColor.Red, new SeededRandom(seed), out var target));
+                picks++;
+                if (target.Equals(new VoxelPos(1, 1, 1))) inner++;
+            }
+
+            float innerShare = (float)inner / picks;
+            Assert.That(innerShare, Is.InRange(0.2f, 0.4f));
+        }
+
+        [Test]
+        public void OnlyInnerVoxelsLeft_TheyAreHitEveryTime()
+        {
+            var model = new VoxelModelBuilder().Box(0, 0, 0, 3, 3, 3, GameColor.Grey).Paint(1, 1, 1, 1, 1, 1, GameColor.Red).Build();
+            model.Remove(new VoxelPos(1, 1, 0));
+
+            Assert.IsTrue(model.TryFindVisible(GameColor.Red, new SeededRandom(3), out var target));
+            Assert.AreEqual(new VoxelPos(1, 1, 1), target);
+        }
+
+        [Test]
         public void Sheep_HoldsFire_WhileItsColourFacesAway_AndIsNotStuck()
         {
             var session = new GameSession(TestLevels.TwoVoxelsDeep(), new SeededRandom(1));

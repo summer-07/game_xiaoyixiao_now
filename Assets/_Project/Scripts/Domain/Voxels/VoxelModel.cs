@@ -13,7 +13,14 @@ namespace SheepStrike.Domain.Voxels
         private readonly Dictionary<GameColor, HashSet<VoxelPos>> _byColor = new Dictionary<GameColor, HashSet<VoxelPos>>();
         private readonly HashSet<VoxelPos> _visible = new HashSet<VoxelPos>();
         private readonly VisibleSurface _surface = new VisibleSurface();
-        private readonly List<VoxelPos> _candidates = new List<VoxelPos>();
+        private readonly List<VoxelPos> _outerCandidates = new List<VoxelPos>();
+        private readonly List<VoxelPos> _innerCandidates = new List<VoxelPos>();
+
+        /// <summary>Voxels that were on the animal's skin before any shot; everything else is "inner".</summary>
+        private readonly HashSet<VoxelPos> _outerLayer = new HashSet<VoxelPos>();
+
+        /// <summary>Out of 100 shots that could go either way, this many hit the outer layer.</summary>
+        private const int OuterSharePercent = 70;
         private ViewDirection? _view;
         private bool _visibilityStale;
 
@@ -26,6 +33,10 @@ namespace SheepStrike.Domain.Voxels
                 SetOf(pair.Value).Add(pair.Key);
             }
             InitialCount = _voxels.Count;
+            foreach (var pos in _voxels.Keys)
+            {
+                if (IsExposed(pos)) _outerLayer.Add(pos);
+            }
         }
 
         public int InitialCount { get; }
@@ -98,22 +109,27 @@ namespace SheepStrike.Domain.Voxels
         }
 
         /// <summary>
-        /// Picks a random voxel of <paramref name="color"/> among those the viewer can see, so the animal
-        /// crumbles all over instead of being peeled in a fixed order. Without a view, every exposed voxel counts.
+        /// Picks a random voxel of <paramref name="color"/> among those the viewer can see, so the animal crumbles
+        /// all over instead of being peeled in a fixed order. When both are on offer, the original outer layer is hit
+        /// about 70% of the time and the uncovered inside about 30%. Without a view, every exposed voxel counts.
         /// </summary>
         public bool TryFindVisible(GameColor color, IRandom random, out VoxelPos target)
         {
             target = default;
             if (!_byColor.TryGetValue(color, out var all)) return false;
 
-            _candidates.Clear();
+            _outerCandidates.Clear();
+            _innerCandidates.Clear();
             foreach (var pos in all)
             {
-                if (IsExposed(pos) && (!_view.HasValue || _visible.Contains(pos))) _candidates.Add(pos);
+                if (!IsExposed(pos) || (_view.HasValue && !_visible.Contains(pos))) continue;
+                (_outerLayer.Contains(pos) ? _outerCandidates : _innerCandidates).Add(pos);
             }
-            if (_candidates.Count == 0) return false;
+            if (_outerCandidates.Count == 0 && _innerCandidates.Count == 0) return false;
 
-            target = _candidates[random.Next(_candidates.Count)];
+            bool outer = _innerCandidates.Count == 0 || (_outerCandidates.Count > 0 && random.Next(100) < OuterSharePercent);
+            var pool = outer ? _outerCandidates : _innerCandidates;
+            target = pool[random.Next(pool.Count)];
             return true;
         }
 

@@ -18,22 +18,32 @@ namespace SheepStrike.Domain.Session
         /// <summary>A deployed sheep has to walk from the queue into the pen before it can fire.</summary>
         public const float DeployTravelSeconds = 0.4f;
 
+        /// <summary>Extra time on an assisted attempt, on top of always dealing the colour the field needs.</summary>
+        public const float AssistTimeFactor = 1.5f;
+
         private readonly IRandom _random;
         private readonly float[] _cooldowns;
         private readonly List<GameEvent> _events = new List<GameEvent>();
+        private readonly FlockDealer _dealer;
+        private int _nextSheepId;
         private float _ramChargeLeft;
         private float _sinceLastHit;
 
-        public GameSession(LevelDefinition level, IRandom random)
+        /// <param name="assisted">Set after repeated failures: the dealer always helps and there is more time.</param>
+        public GameSession(LevelDefinition level, IRandom random, bool assisted = false)
         {
             Level = level;
             _random = random;
+            IsAssisted = assisted;
             Model = new VoxelModel(level.Voxels);
-            Queue = new SheepQueue(CreateFlock(level));
+            Queue = new SheepQueue(CreateVisibleFlock(level));
+            var reserve = new WoolReserve(UnseenWool(level));
+            _dealer = new FlockDealer(reserve, assisted ? level.Dealing.WithHelpfulness(1f) : level.Dealing, random);
             Pad = new LaunchPad(level.StartingSlots, level.MaxSlots);
             _cooldowns = new float[level.MaxSlots];
-            TimeLeft = level.TimeLimitSeconds;
+            TimeLeft = level.TimeLimitSeconds * (assisted ? AssistTimeFactor : 1f);
             State = SessionState.Playing;
+            for (int column = 0; column < Queue.ColumnCount; column++) RefillQueue(column);
         }
 
         public LevelDefinition Level { get; }
@@ -45,6 +55,7 @@ namespace SheepStrike.Domain.Session
         public int Combo { get; private set; }
         public int BestCombo { get; private set; }
         public bool IsShepherdDogActive { get; private set; }
+        public bool IsAssisted { get; }
         public bool IsRamChargeActive => _ramChargeLeft > 0f;
 
         public IReadOnlyList<GameEvent> DrainEvents()
@@ -71,6 +82,7 @@ namespace SheepStrike.Domain.Session
 
             var sheep = Queue.Take(column, row);
             Pad.TryPlace(sheep, out int slot);
+            RefillQueue(column);
             _cooldowns[slot] = DeployTravelSeconds;
             if (row != 0) IsShepherdDogActive = false;
             _events.Add(new SheepDeployed(sheep.Id, column, row, slot));
@@ -111,6 +123,35 @@ namespace SheepStrike.Domain.Session
             }
             _events.Add(new BoosterApplied(booster));
             return true;
+        }
+
+        /// <summary>Deals unseen sheep into a column until it shows <see cref="SheepQueue.VisibleRows"/> again or the reserve runs dry.</summary>
+        public void RefillQueue(int column)
+        {
+            while (Queue.HasRoom(column) && _dealer.TryDeal(FieldNeed, out var spec))
+            {
+                Queue.Append(column, new Sheep(_nextSheepId++, spec.Color, spec.Ammo));
+            }
+        }
+
+        /// <summary>Exposed voxels of a colour minus the wool already lined up for it on the pad and in the visible queue.</summary>
+        private int FieldNeed(GameColor color)
+        {
+            int need = Model.CountExposed(color);
+            for (int slot = 0; slot < Pad.Capacity; slot++)
+            {
+                var sheep = Pad.At(slot);
+                if (sheep != null && sheep.Color == color) need -= sheep.Ammo;
+            }
+            for (int column = 0; column < Queue.ColumnCount; column++)
+            {
+                for (int row = 0; row < Queue.RowCount(column); row++)
+                {
+                    var sheep = Queue.Peek(column, row);
+                    if (sheep.Color == color) need -= sheep.Ammo;
+                }
+            }
+            return need;
         }
 
         public void GiveUp()
@@ -214,20 +255,35 @@ namespace SheepStrike.Domain.Session
             _events.Add(new StateChanged(next));
         }
 
-        private static IEnumerable<IEnumerable<Sheep>> CreateFlock(LevelDefinition level)
+        /// <summary>The first <see cref="SheepQueue.VisibleRows"/> sheep of every generated column, exactly as generated.</summary>
+        private IEnumerable<IEnumerable<Sheep>> CreateVisibleFlock(LevelDefinition level)
         {
-            int nextId = 0;
             var columns = new List<List<Sheep>>();
             foreach (var specColumn in level.SheepColumns)
             {
                 var column = new List<Sheep>();
-                foreach (var spec in specColumn)
+                for (int row = 0; row < specColumn.Count && row < SheepQueue.VisibleRows; row++)
                 {
-                    column.Add(new Sheep(nextId++, spec.Color, spec.Ammo));
+                    column.Add(new Sheep(_nextSheepId++, specColumn[row].Color, specColumn[row].Ammo));
                 }
                 columns.Add(column);
             }
             return columns;
+        }
+
+        /// <summary>Wool of every generated sheep the player can't see yet; it is dealt again during play.</summary>
+        private static Dictionary<GameColor, int> UnseenWool(LevelDefinition level)
+        {
+            var wool = new Dictionary<GameColor, int>();
+            foreach (var specColumn in level.SheepColumns)
+            {
+                for (int row = SheepQueue.VisibleRows; row < specColumn.Count; row++)
+                {
+                    wool.TryGetValue(specColumn[row].Color, out int ammo);
+                    wool[specColumn[row].Color] = ammo + specColumn[row].Ammo;
+                }
+            }
+            return wool;
         }
     }
 }

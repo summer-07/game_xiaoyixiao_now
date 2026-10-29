@@ -15,7 +15,8 @@ namespace SheepStrike.Domain.Levels
             int maxSlots,
             float timeLimitSeconds,
             float fireIntervalSeconds,
-            int seed)
+            int seed,
+            DealRules dealing = null)
         {
             Number = number;
             TargetId = targetId;
@@ -26,6 +27,7 @@ namespace SheepStrike.Domain.Levels
             TimeLimitSeconds = timeLimitSeconds;
             FireIntervalSeconds = fireIntervalSeconds;
             Seed = seed;
+            Dealing = dealing ?? DealRules.Default;
         }
 
         public int Number { get; }
@@ -46,5 +48,8 @@ namespace SheepStrike.Domain.Levels
         public float FireIntervalSeconds { get; }
 
         public int Seed { get; }
+
+        /// <summary>How sheep beyond the visible queue rows are dealt during play.</summary>
+        public DealRules Dealing { get; }
     }
 }

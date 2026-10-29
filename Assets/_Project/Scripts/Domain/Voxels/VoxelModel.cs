@@ -69,6 +69,17 @@ namespace SheepStrike.Domain.Voxels
 
         public bool HasExposed(GameColor color) => TryFindExposed(color, out _);
 
+        public int CountExposed(GameColor color)
+        {
+            if (!_byColor.TryGetValue(color, out var candidates)) return 0;
+            int count = 0;
+            foreach (var pos in candidates)
+            {
+                if (IsExposed(pos)) count++;
+            }
+            return count;
+        }
+
         public void SetView(ViewDirection view)
         {
             _view = view;

@@ -1,13 +1,18 @@
+using System;
 using System.Collections.Generic;
 using SheepStrike.Domain.Core;
 
 namespace SheepStrike.Domain.Shooters
 {
     /// <summary>
-    /// The waiting flock, arranged in columns. Normally only the front sheep (row 0) of a column can be sent out.
+    /// The waiting sheep the player can see, arranged in columns of at most <see cref="VisibleRows"/>.
+    /// Normally only the front sheep (row 0) of a column can be sent out. Sheep behind them don't exist yet:
+    /// the session deals them from the wool reserve as rows free up, so what the player sees never changes.
     /// </summary>
     public sealed class SheepQueue
     {
+        public const int VisibleRows = 2;
+
         private readonly List<List<Sheep>> _columns;
 
         public SheepQueue(IEnumerable<IEnumerable<Sheep>> columns)
@@ -39,6 +44,15 @@ namespace SheepStrike.Domain.Shooters
 
         public bool IsValid(int column, int row) =>
             column >= 0 && column < _columns.Count && row >= 0 && row < _columns[column].Count;
+
+        public bool HasRoom(int column) => _columns[column].Count < VisibleRows;
+
+        /// <summary>Joins a newly dealt sheep at the back of a column.</summary>
+        public void Append(int column, Sheep sheep)
+        {
+            if (!HasRoom(column)) throw new InvalidOperationException($"Column {column} already shows {VisibleRows} sheep.");
+            _columns[column].Add(sheep);
+        }
 
         public Sheep Take(int column, int row)
         {

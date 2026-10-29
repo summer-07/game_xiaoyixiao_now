@@ -12,7 +12,7 @@ namespace SheepStrike.Presentation.Views
     /// </summary>
     public sealed class SheepQueueView
     {
-        public const int VisibleRows = 2;
+        public const int VisibleRows = SheepQueue.VisibleRows;
         private const float CellWidth = 180f;
         private const float CellHeight = 165f;
         private const float ColumnStep = 205f;

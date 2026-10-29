@@ -26,7 +26,7 @@ namespace SheepStrike.Tests
             var voxels = StripedCube();
             var model = new VoxelModel(voxels);
 
-            var painted = InteriorPainter.Paint(voxels, paletteSize: 2, shellThickness: 1);
+            var painted = InteriorPainter.Paint(voxels, new InteriorStyle(reusedColors: 2, extraColors: 0, shellThickness: 1, noise: 0f), new SeededRandom(1));
 
             foreach (var pair in voxels.Where(p => model.IsExposed(p.Key)))
             {
@@ -40,7 +40,7 @@ namespace SheepStrike.Tests
             var voxels = StripedCube();
             var model = new VoxelModel(voxels);
 
-            var painted = InteriorPainter.Paint(voxels, paletteSize: 2, shellThickness: 1);
+            var painted = InteriorPainter.Paint(voxels, new InteriorStyle(reusedColors: 2, extraColors: 0, shellThickness: 1, noise: 0f), new SeededRandom(1));
 
             var interior = painted.Where(p => !model.IsExposed(p.Key)).Select(p => p.Value).Distinct().ToList();
             Assert.Greater(interior.Count, 1);
@@ -49,11 +49,39 @@ namespace SheepStrike.Tests
         }
 
         [Test]
+        public void ExtraColours_AddNewColoursInside_ButNeverOnTheSurface()
+        {
+            var voxels = StripedCube();
+            var model = new VoxelModel(voxels);
+
+            var painted = InteriorPainter.Paint(voxels, new InteriorStyle(reusedColors: 1, extraColors: 2, shellThickness: 1, noise: 0.5f), new SeededRandom(4));
+
+            var surfaceColours = voxels.Values.Distinct().ToList();
+            var newColours = painted.Values.Distinct().Except(surfaceColours).ToList();
+            Assert.AreEqual(2, newColours.Count);
+            foreach (var pair in painted.Where(p => newColours.Contains(p.Value)))
+            {
+                Assert.IsFalse(model.IsExposed(pair.Key));
+            }
+        }
+
+        [Test]
+        public void SameSeed_PaintsTheSameInterior()
+        {
+            var style = new InteriorStyle(reusedColors: 2, extraColors: 3, shellThickness: 1, noise: 0.6f);
+
+            var a = InteriorPainter.Paint(StripedCube(), style, new SeededRandom(11));
+            var b = InteriorPainter.Paint(StripedCube(), style, new SeededRandom(11));
+
+            CollectionAssert.AreEquivalent(a, b);
+        }
+
+        [Test]
         public void PaletteSizeZero_LeavesTheModelUntouched()
         {
             var voxels = StripedCube();
 
-            var painted = InteriorPainter.Paint(voxels, paletteSize: 0, shellThickness: 1);
+            var painted = InteriorPainter.Paint(voxels, InteriorStyle.Untouched, new SeededRandom(1));
 
             CollectionAssert.AreEquivalent(voxels, painted);
         }

@@ -23,6 +23,7 @@ namespace SheepStrike.Presentation.Theme
         public const string RemainingLabel = "剩余数量";
         public const string AdBadge = "视频";
         public const string Unlock = "解锁";
+        public const string Assisted = "羊群士气大增：这次一定能赢！";
 
         public static string Level(int number) => $"第 {number} 关";
         public static string Remaining(int count) => count.ToString();

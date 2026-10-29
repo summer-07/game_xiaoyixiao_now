@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using SheepStrike.Domain.Core;
+using SheepStrike.Domain.Levels;
 using SheepStrike.Domain.Session;
 using SheepStrike.UseCases.Ports;
 
@@ -28,7 +29,8 @@ namespace SheepStrike.UseCases.Interactors
         public GameSession Execute(int levelNumber)
         {
             var level = _catalog.Load(levelNumber);
-            _context.Session = new GameSession(level, new SeededRandom(level.Seed));
+            bool assisted = _progress.FailuresAt(levelNumber) >= LevelRules.FailuresBeforeAssist(levelNumber);
+            _context.Session = new GameSession(level, new SeededRandom(level.Seed), assisted);
             _context.Wallet = new BoosterWallet(FreeChargesPerLevel);
             return _context.Session;
         }

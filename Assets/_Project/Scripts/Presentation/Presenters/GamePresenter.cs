@@ -116,6 +116,7 @@ namespace SheepStrike.Presentation.Presenters
             _views.Rotator.Bind(_views.Model.transform);
             Canvas.ForceUpdateCanvases();
             _views.Camera.Frame(_views.Model.transform.position, _views.Model.Radius, hud.TopBarBottomScreenY(), hud.Slots.TopScreenY());
+            if (session.IsAssisted) hud.Toast(Texts.Assisted);
         }
 
         private void OnSheepTapped(int column, int row)

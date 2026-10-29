@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SheepStrike.Domain.Core;
@@ -5,30 +6,31 @@ using SheepStrike.Domain.Core;
 namespace SheepStrike.Domain.Levels
 {
     /// <summary>
-    /// Repaints an animal's hidden interior in concentric shells, so peeling it reveals new colours instead of
-    /// one solid block. Interior colours are borrowed from the animal's own surface (skipping its dominant colour),
-    /// so the level never gains a colour and the sheep mix stays as easy to read as before.
+    /// Repaints an animal's hidden interior so peeling it reveals new colours instead of one solid block.
+    /// The surface is never changed. Inside, voxels form concentric colour bands drawn from a small palette:
+    /// a few of the animal's own surface colours plus "extra" colours that exist only inside. Noise scatters
+    /// voxels out of their band. Everything comes from the seeded random, so a level always looks the same.
     /// </summary>
     public static class InteriorPainter
     {
-        /// <param name="paletteSize">How many surface colours to reuse inside; 0 leaves the model untouched.</param>
-        /// <param name="shellThickness">How many voxel layers each interior colour band spans.</param>
-        public static Dictionary<VoxelPos, GameColor> Paint(IReadOnlyDictionary<VoxelPos, GameColor> voxels, int paletteSize, int shellThickness)
+        public static Dictionary<VoxelPos, GameColor> Paint(IReadOnlyDictionary<VoxelPos, GameColor> voxels, InteriorStyle style, IRandom random)
         {
             var painted = new Dictionary<VoxelPos, GameColor>(voxels.Count);
             foreach (var pair in voxels) painted.Add(pair.Key, pair.Value);
-            if (paletteSize <= 0 || shellThickness <= 0) return painted;
+            if (style.IsUntouched) return painted;
 
             var depth = DepthFromSurface(voxels);
-            var palette = InteriorPalette(voxels, depth, paletteSize);
+            var palette = Palette(voxels, depth, style, random);
             if (palette.Count == 0) return painted;
 
-            foreach (var pair in depth)
+            var interior = depth.Where(p => p.Value > 1).OrderBy(p => p.Value).ThenBy(p => p.Key.X).ThenBy(p => p.Key.Y).ThenBy(p => p.Key.Z).ToList();
+            foreach (var pair in interior)
             {
-                if (pair.Value <= 1) continue;
-                int band = (pair.Value - 2) / shellThickness;
-                painted[pair.Key] = palette[band % palette.Count];
+                int band = (pair.Value - 2) / style.ShellThickness;
+                bool scattered = random.Next(1000) < style.Noise * 1000f;
+                painted[pair.Key] = scattered ? palette[random.Next(palette.Count)] : palette[band % palette.Count];
             }
+            EnsureEveryColourAppears(painted, interior, palette, random);
             return painted;
         }
 
@@ -58,17 +60,54 @@ namespace SheepStrike.Domain.Levels
             return depth;
         }
 
-        /// <summary>The surface colours after the dominant one, most common first; the dominant one only if nothing else exists.</summary>
-        private static List<GameColor> InteriorPalette(IReadOnlyDictionary<VoxelPos, GameColor> voxels, Dictionary<VoxelPos, int> depth, int paletteSize)
+        /// <summary>
+        /// Reused surface colours (after the dominant one, most common first; the dominant one only if nothing else
+        /// exists), then extra colours drawn at random from those the surface does not use.
+        /// </summary>
+        private static List<GameColor> Palette(IReadOnlyDictionary<VoxelPos, GameColor> voxels, Dictionary<VoxelPos, int> depth, InteriorStyle style, IRandom random)
         {
-            var bySurfaceCount = depth.Where(p => p.Value == 1)
+            var surface = depth.Where(p => p.Value == 1)
                 .GroupBy(p => voxels[p.Key])
                 .OrderByDescending(g => g.Count())
                 .ThenBy(g => g.Key)
                 .Select(g => g.Key)
                 .ToList();
-            if (bySurfaceCount.Count <= 1) return bySurfaceCount;
-            return bySurfaceCount.Skip(1).Take(paletteSize).ToList();
+
+            var palette = surface.Count <= 1 ? surface.Take(style.ReusedColors).ToList() : surface.Skip(1).Take(style.ReusedColors).ToList();
+
+            var unused = Enum.GetValues(typeof(GameColor)).Cast<GameColor>().Where(c => !surface.Contains(c)).ToList();
+            for (int i = 0; i < style.ExtraColors && unused.Count > 0; i++)
+            {
+                int pick = random.Next(unused.Count);
+                palette.Add(unused[pick]);
+                unused.RemoveAt(pick);
+            }
+            return palette;
+        }
+
+        /// <summary>
+        /// A colour the bands or noise happened to skip still gets one interior voxel, taken from a colour that has
+        /// more than one, so the style's colour count is honoured without wiping out another colour.
+        /// </summary>
+        private static void EnsureEveryColourAppears(Dictionary<VoxelPos, GameColor> painted, List<KeyValuePair<VoxelPos, int>> interior, List<GameColor> palette, IRandom random)
+        {
+            if (interior.Count < palette.Count) return;
+            var counts = new Dictionary<GameColor, int>();
+            foreach (var pair in interior)
+            {
+                counts.TryGetValue(painted[pair.Key], out int count);
+                counts[painted[pair.Key]] = count + 1;
+            }
+
+            foreach (var color in palette)
+            {
+                if (counts.ContainsKey(color)) continue;
+                var donors = interior.Where(p => counts[painted[p.Key]] > 1).ToList();
+                var pos = donors[random.Next(donors.Count)].Key;
+                counts[painted[pos]]--;
+                painted[pos] = color;
+                counts[color] = 1;
+            }
         }
 
         private static bool IsExposed(IReadOnlyDictionary<VoxelPos, GameColor> voxels, VoxelPos pos)

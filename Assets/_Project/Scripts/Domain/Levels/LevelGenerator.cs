@@ -5,8 +5,9 @@ using SheepStrike.Domain.Core;
 namespace SheepStrike.Domain.Levels
 {
     /// <summary>
-    /// Turns a voxel animal into a playable level: the wool of every colour is split across sheep so that
-    /// total ammo per colour equals the number of voxels of that colour (see <see cref="LevelRules.IsBalanced"/>).
+    /// Turns a voxel animal into a playable level: paints its interior, then splits the wool of every colour across
+    /// sheep so that total ammo per colour equals the number of voxels of that colour (see <see cref="LevelRules.IsBalanced"/>).
+    /// Only the first queue rows of this deal are fixed; the rest becomes the reserve the session deals from.
     /// </summary>
     public static class LevelGenerator
     {
@@ -22,8 +23,8 @@ namespace SheepStrike.Domain.Levels
                 throw new ArgumentException("Invalid ammo range in tuning.", nameof(tuning));
             }
 
-            var painted = InteriorPainter.Paint(voxels, tuning.InteriorPaletteSize, tuning.InteriorShellThickness);
             var random = new SeededRandom(seed);
+            var painted = InteriorPainter.Paint(voxels, tuning.Interior, random);
             var flock = SplitIntoSheep(CountColors(painted), tuning, random);
             Shuffle(flock, random);
 
@@ -36,7 +37,8 @@ namespace SheepStrike.Domain.Levels
                 tuning.MaxSlots,
                 tuning.TimeLimitSeconds,
                 tuning.FireIntervalSeconds,
-                seed);
+                seed,
+                new DealRules(tuning.MinAmmoPerSheep, tuning.MaxAmmoPerSheep, tuning.DealerHelpfulness));
         }
 
         private static SortedDictionary<GameColor, int> CountColors(IReadOnlyDictionary<VoxelPos, GameColor> voxels)

@@ -28,8 +28,13 @@ namespace SheepStrike.UseCases.Interactors
             float secondsUsed = session.Level.TimeLimitSeconds - session.TimeLeft;
             _platform.ReportLevelResult(current, won, secondsUsed);
 
-            if (!won) return current;
+            if (!won)
+            {
+                _progress.SaveFailures(current, _progress.FailuresAt(current) + 1);
+                return current;
+            }
 
+            _progress.SaveFailures(current, 0);
             int next = current + 1;
             if (next > _progress.HighestUnlockedLevel) _progress.SaveHighestUnlockedLevel(next);
             return next;

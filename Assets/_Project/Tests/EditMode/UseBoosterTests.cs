@@ -30,6 +30,8 @@ namespace SheepStrike.Tests
         {
             public int HighestUnlockedLevel { get; private set; } = 1;
             public void SaveHighestUnlockedLevel(int level) => HighestUnlockedLevel = level;
+            public int FailuresAt(int level) => 0;
+            public void SaveFailures(int level, int count) { }
         }
 
         private PlayContext _context;

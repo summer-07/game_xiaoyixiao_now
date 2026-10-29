@@ -13,9 +13,19 @@ namespace SheepStrike.Presentation.Views
     {
         public const float CellSize = 0.25f;
         private const float CubeScale = 0.92f;
+        private const float PopGrowSeconds = 0.06f;
+        private const float PopSeconds = 0.18f;
+        private const float PopPeakScale = 1.4f;
+
+        private sealed class PoppingCube
+        {
+            public GameObject Cube;
+            public float Elapsed;
+        }
 
         private readonly Dictionary<VoxelPos, GameObject> _cubes = new Dictionary<VoxelPos, GameObject>();
         private readonly Stack<GameObject> _pool = new Stack<GameObject>();
+        private readonly List<PoppingCube> _popping = new List<PoppingCube>();
         private RenderKit _kit;
         private VoxelModel _model;
         private Vector3 _center;
@@ -45,8 +55,7 @@ namespace SheepStrike.Presentation.Views
             if (_cubes.TryGetValue(pos, out var cube))
             {
                 _cubes.Remove(pos);
-                cube.SetActive(false);
-                _pool.Push(cube);
+                StartPop(cube);
             }
 
             foreach (var direction in VoxelPos.FaceDirections)
@@ -57,6 +66,41 @@ namespace SheepStrike.Presentation.Views
                     Spawn(neighbour, color);
                 }
             }
+        }
+
+        private void Update()
+        {
+            for (int i = _popping.Count - 1; i >= 0; i--)
+            {
+                var popping = _popping[i];
+                popping.Elapsed += Time.deltaTime;
+                if (popping.Elapsed >= PopSeconds)
+                {
+                    Recycle(popping.Cube);
+                    _popping.RemoveAt(i);
+                    continue;
+                }
+                popping.Cube.transform.localScale = Vector3.one * (CellSize * CubeScale * PopScaleAt(popping.Elapsed));
+            }
+        }
+
+        /// <summary>The hit cube flashes white, swells, then shrinks away while the debris bursts out of it.</summary>
+        private void StartPop(GameObject cube)
+        {
+            cube.GetComponent<MeshRenderer>().sharedMaterial = _kit.MaterialOf(GameColor.White);
+            _popping.Add(new PoppingCube { Cube = cube });
+        }
+
+        private static float PopScaleAt(float elapsed)
+        {
+            if (elapsed < PopGrowSeconds) return Mathf.Lerp(1f, PopPeakScale, elapsed / PopGrowSeconds);
+            return Mathf.Lerp(PopPeakScale, 0f, (elapsed - PopGrowSeconds) / (PopSeconds - PopGrowSeconds));
+        }
+
+        private void Recycle(GameObject cube)
+        {
+            cube.SetActive(false);
+            _pool.Push(cube);
         }
 
         private void Spawn(VoxelPos pos, GameColor color)
@@ -95,12 +139,10 @@ namespace SheepStrike.Presentation.Views
 
         private void Clear()
         {
-            foreach (var cube in _cubes.Values)
-            {
-                cube.SetActive(false);
-                _pool.Push(cube);
-            }
+            foreach (var cube in _cubes.Values) Recycle(cube);
             _cubes.Clear();
+            foreach (var popping in _popping) Recycle(popping.Cube);
+            _popping.Clear();
         }
     }
 }

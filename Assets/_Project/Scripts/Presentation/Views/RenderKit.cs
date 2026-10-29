@@ -9,6 +9,8 @@ namespace SheepStrike.Presentation.Views
     public sealed class RenderKit
     {
         private const string ShaderName = "SheepStrike/VoxelToon";
+        // Built-in and always included in player builds, so trails work in WebGL without a material asset.
+        private const string TrailShaderName = "Sprites/Default";
 
         private readonly Shader _shader;
         private readonly Dictionary<GameColor, Material> _materials = new Dictionary<GameColor, Material>();
@@ -18,11 +20,15 @@ namespace SheepStrike.Presentation.Views
             _shader = Shader.Find(ShaderName) ?? Shader.Find("Unlit/Color");
             CubeMesh = ExtractMesh(PrimitiveType.Cube);
             SphereMesh = ExtractMesh(PrimitiveType.Sphere);
+            TrailMaterial = new Material(Shader.Find(TrailShaderName) ?? _shader) { name = "WoolTrail" };
         }
 
         public Mesh CubeMesh { get; }
 
         public Mesh SphereMesh { get; }
+
+        /// <summary>Vertex-coloured, alpha-blended material; each trail tints it through its own gradient.</summary>
+        public Material TrailMaterial { get; }
 
         public Material MaterialOf(GameColor color)
         {

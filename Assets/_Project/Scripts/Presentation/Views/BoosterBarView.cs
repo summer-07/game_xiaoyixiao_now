@@ -50,7 +50,7 @@ namespace SheepStrike.Presentation.Views
             for (int i = 0; i < Order.Length; i++)
             {
                 var booster = Order[i];
-                var position = new Vector2(-540f + step * (i + 0.5f), 30f);
+                var position = new Vector2(-540f + step * (i + 0.5f), 48f);
                 _widgets.Add(booster, CreateWidget(bar, art, booster, position, () => onTap(booster)));
             }
         }
@@ -90,7 +90,7 @@ namespace SheepStrike.Presentation.Views
             var icon = UiFactory.AddImage(iconRect, art.Booster(booster), Color.white);
             if (icon.sprite == null) icon.color = new Color(1f, 1f, 1f, 0f);
 
-            var label = UiFactory.AddLabel(UiFactory.Rect("Name", rect, new Vector2(0.5f, 0f), new Vector2(0f, -32f), new Vector2(260f, 56f)), art.Font, 40, TextAnchor.MiddleCenter);
+            var label = UiFactory.AddLabel(UiFactory.Rect("Name", rect, new Vector2(0.5f, 0f), new Vector2(0f, -26f), new Vector2(260f, 52f)), art.Font, 38, TextAnchor.MiddleCenter);
             label.text = Texts.Booster(booster);
 
             var count = UiFactory.Rect("Count", rect, new Vector2(1f, 1f), new Vector2(-14f, -14f), Vector2.one * BadgeSize);

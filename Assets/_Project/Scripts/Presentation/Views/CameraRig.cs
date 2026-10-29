@@ -5,7 +5,8 @@ namespace SheepStrike.Presentation.Views
     /// <summary>Frames the animal inside the free screen band between the top bar and the launch slots.</summary>
     public sealed class CameraRig
     {
-        private const float Fill = 0.85f;
+        // Above 1: the bounding sphere is conservative, so the animal itself still fits while filling the band like the reference.
+        private const float Fill = 1.15f;
 
         private readonly Camera _camera;
 

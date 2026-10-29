@@ -11,6 +11,7 @@ namespace SheepStrike.Presentation.Views
     {
         private const float Size = 150f;
         private const float Spacing = 14f;
+        private const float UsableWidth = 1040f;
         private const float SheepFill = 0.86f;
         private const float RecoilPunch = 0.18f;
         private const float RetireShrinkPunch = -0.3f;
@@ -57,6 +58,9 @@ namespace SheepStrike.Presentation.Views
             int shown = capacity + (canGrow ? 1 : 0);
             float start = -(shown - 1) * (Size + Spacing) * 0.5f;
 
+            float rowWidth = shown * (Size + Spacing) - Spacing;
+            _root.localScale = Vector3.one * Mathf.Min(1f, UsableWidth / rowWidth);
+
             for (int i = 0; i < _slots.Length; i++)
             {
                 bool visible = i < capacity;
@@ -102,7 +106,7 @@ namespace SheepStrike.Presentation.Views
 
         public Vector2 ScreenPositionOf(int slot) => RectTransformUtility.WorldToScreenPoint(null, _slots[Mathf.Clamp(slot, 0, _capacity - 1)].Rect.position);
 
-        public Vector2 SheepSize => Vector2.one * (Size * SheepFill);
+        public Vector2 SheepSize => Vector2.one * (Size * SheepFill * _root.localScale.x);
 
         public float TopScreenY()
         {

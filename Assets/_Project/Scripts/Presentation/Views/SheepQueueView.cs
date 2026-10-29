@@ -15,7 +15,8 @@ namespace SheepStrike.Presentation.Views
         public const int VisibleRows = SheepQueue.VisibleRows;
         private const float CellWidth = 180f;
         private const float CellHeight = 165f;
-        private const float ColumnStep = 205f;
+        /// <summary>Horizontal distance between queue columns; the pen uses it too so slots sit straight above columns.</summary>
+        public const float ColumnStep = 205f;
         private const float RowStep = 180f;
         private const float BackRowScale = 0.92f;
         private const float FrontBreathe = 0.045f;

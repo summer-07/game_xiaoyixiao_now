@@ -15,10 +15,13 @@ namespace SheepStrike.Presentation.Views
     {
         private const int Columns = 3;
         private static readonly Vector2 BoardSize = new Vector2(980f, 1420f);
-        private static readonly Vector2 FrameSize = new Vector2(250f, 250f);
+        private static readonly Vector2 FrameSize = new Vector2(230f, 230f);
+        private static readonly Vector2 ReplaySize = new Vector2(200f, 76f);
+        private const float ReplayGap = 14f;
         private const float CellWidth = 290f;
         private const float CellHeight = 340f;
-        private const float GridTop = -150f;
+        private const float PagerY = 55f;
+        private const float GridTop = -130f;
         private const float FrameInset = 22f;
         private const float BadgeSize = 64f;
 
@@ -53,7 +56,7 @@ namespace SheepStrike.Presentation.Views
 
             for (int i = 0; i < BrowseCollection.PageSize; i++) _cards.Add(CreateCard(art, i, onReplay));
 
-            var pager = UiFactory.Rect("Pager", _panel.Content, new Vector2(0.5f, 0f), new Vector2(0f, 70f), new Vector2(860f, 90f));
+            var pager = UiFactory.Rect("Pager", _panel.Content, new Vector2(0.5f, 0f), new Vector2(0f, PagerY), new Vector2(860f, 90f));
             _previous = PagerButton(art, pager, -280f, Texts.PreviousPage, () => onPageRequested(_page - 1));
             _next = PagerButton(art, pager, 280f, Texts.NextPage, () => onPageRequested(_page + 1));
             _pageLabel = UiFactory.AddLabel(UiFactory.Rect("Page", pager, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(300f, 90f)), art.Font, 48, TextAnchor.MiddleCenter, Palette.WoodText);
@@ -118,7 +121,7 @@ namespace SheepStrike.Presentation.Views
             KeepWhiteRim(number);
 
             var card = new Card { Root = root, Number = number, Animal = animal, Locked = locked };
-            var replay = UiFactory.TextButton(root, "Replay", new Vector2(0f, -FrameSize.y * 0.5f - 52f), new Vector2(200f, 70f), art, Texts.Replay, Palette.WoodLight, () => onReplay(card.Level));
+            var replay = UiFactory.TextButton(root, "Replay", new Vector2(0f, -(FrameSize.y + ReplaySize.y) * 0.5f - ReplayGap), ReplaySize, art, Texts.Replay, Palette.WoodLight, () => onReplay(card.Level));
             foreach (var label in replay.GetComponentsInChildren<Text>()) label.color = Palette.WoodText;
             card.Replay = replay.gameObject;
             return card;

@@ -14,7 +14,6 @@ namespace SheepStrike.Presentation.Views
     public sealed class SlotRowView
     {
         private const float Size = 150f;
-        private const float Spacing = 14f;
         private const float RowGap = 30f;
         private const float SheepFill = 0.86f;
         private const float RecoilPunch = 0.18f;
@@ -60,7 +59,7 @@ namespace SheepStrike.Presentation.Views
             for (int i = 0; i < _slots.Length; i++)
             {
                 var position = positionOf(i);
-                float x = (position.X - (rowLength - 1) * 0.5f) * (Size + Spacing);
+                float x = (position.X - (rowLength - 1) * 0.5f) * SheepQueueView.ColumnStep;
                 _slots[i].Rect.anchoredPosition = new Vector2(x, position.Row * (Size + RowGap));
                 _slots[i].Locked.SetActive(i >= capacity);
             }

@@ -15,7 +15,6 @@ namespace SheepStrike.Presentation.Views
         private static readonly Vector2 StartSize = new Vector2(640f, 220f);
         private const float StartY = 260f;
         private const float StartBreathe = 0.035f;
-        private const float GearSize = 120f;
         private const float SideX = -110f;
         private const float SideBottom = 560f;
         private const float SideStep = 210f;
@@ -55,9 +54,9 @@ namespace SheepStrike.Presentation.Views
 
         private void BuildGear(ArtLibrary art)
         {
-            var rect = UiFactory.Rect("Settings", _root, new Vector2(0f, 1f), new Vector2(100f, -110f), Vector2.one * GearSize);
+            var rect = UiFactory.Rect("Settings", _root, new Vector2(0f, 1f), HudView.GearPosition, Vector2.one * HudView.GearSize);
             UiFactory.AddImage(rect, art.Disc, Palette.PanelDark, true);
-            UiFactory.AddImage(UiFactory.Rect("Gear", rect, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one * (GearSize * 0.78f)), art.Gear, Palette.MenuIcon);
+            UiFactory.AddImage(UiFactory.Rect("Gear", rect, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one * (HudView.GearSize * 0.78f)), art.Gear, Palette.MenuIcon);
             UiFactory.AddButton(rect, () => SettingsTapped?.Invoke());
         }
 

@@ -13,8 +13,11 @@ namespace SheepStrike.Presentation.Views
     public sealed class HudView : MonoBehaviour
     {
         private const float TopBarHeight = 230f;
-        private const float PillsX = 250f;
-        private const float GearSize = 100f;
+        private const float PillsX = 265f;
+
+        /// <summary>The home screen puts its gear at the same spot, so it doesn't jump when a level starts.</summary>
+        public const float GearSize = 96f;
+        public static readonly Vector2 GearPosition = new Vector2(70f, -75f);
         private const float ToastSeconds = 1.6f;
         private const float ToastFadeSeconds = 0.4f;
         private const int ComboVisibleFrom = 3;
@@ -55,6 +58,7 @@ namespace SheepStrike.Presentation.Views
         private bool _comboEnabled = true;
         private Text _toast;
         private Image _toastPill;
+        private GameObject _settingsButton;
         private float _toastLeft;
         private RectTransform _resultPanel;
         private Text _resultText;
@@ -95,6 +99,7 @@ namespace SheepStrike.Presentation.Views
         public void SetGameplayVisible(bool visible)
         {
             _topBar.gameObject.SetActive(visible);
+            _settingsButton.SetActive(visible);
             Slots.Root.gameObject.SetActive(visible);
             Queue.Root.gameObject.SetActive(visible);
             Boosters.Root.gameObject.SetActive(visible);
@@ -212,11 +217,12 @@ namespace SheepStrike.Presentation.Views
 
         private void BuildSettingsButton()
         {
-            var rect = UiFactory.Rect("Settings", _topBar, new Vector2(0f, 0.5f), new Vector2(70f, 40f), Vector2.one * GearSize);
+            var rect = UiFactory.Rect("Settings", (RectTransform)transform, new Vector2(0f, 1f), GearPosition, Vector2.one * GearSize);
             UiFactory.AddImage(rect, _art.Disc, Palette.PanelDark, true);
             var gear = UiFactory.Rect("Gear", rect, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one * (GearSize * 0.78f));
             UiFactory.AddImage(gear, _art.Gear, Palette.MenuIcon);
             UiFactory.AddButton(rect, () => SettingsTapped?.Invoke());
+            _settingsButton = rect.gameObject;
         }
 
         private void BuildRemainingPill()

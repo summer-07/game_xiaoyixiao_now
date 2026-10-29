@@ -3,24 +3,24 @@ using UnityEngine.EventSystems;
 
 namespace SheepStrike.Presentation.Views
 {
-    /// <summary>Drag anywhere outside the UI to spin the animal; it drifts slowly when idle.</summary>
+    /// <summary>
+    /// Drag sideways anywhere outside the UI to spin the animal; it drifts slowly when idle.
+    /// Vertical drags are ignored: the animal stays upright and never tilts up or down.
+    /// </summary>
     public sealed class ModelRotator : MonoBehaviour
     {
         private const float DegreesPerPixel = 0.35f;
         private const float IdleSpinSpeed = 8f;
-        private const float MaxPitch = 35f;
 
         private Transform _target;
         private Vector3 _lastPointer;
         private bool _dragging;
-        private float _pitch;
         private float _yaw;
         private float _yawVelocity;
 
         public void Bind(Transform target)
         {
             _target = target;
-            _pitch = 0f;
             _yaw = target.localEulerAngles.y;
         }
 
@@ -40,7 +40,6 @@ namespace SheepStrike.Presentation.Views
                 var delta = Input.mousePosition - _lastPointer;
                 _lastPointer = Input.mousePosition;
                 _yawVelocity = -delta.x * DegreesPerPixel / Mathf.Max(Time.deltaTime, 0.001f);
-                _pitch = Mathf.Clamp(_pitch + delta.y * DegreesPerPixel, -MaxPitch, MaxPitch);
             }
             else
             {
@@ -48,7 +47,7 @@ namespace SheepStrike.Presentation.Views
             }
 
             _yaw += _yawVelocity * Time.deltaTime;
-            _target.localRotation = Quaternion.Euler(_pitch, _yaw, 0f);
+            _target.localRotation = Quaternion.Euler(0f, _yaw, 0f);
         }
 
         private static bool IsPointerOverUi()

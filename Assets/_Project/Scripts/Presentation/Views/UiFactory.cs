@@ -12,6 +12,7 @@ namespace SheepStrike.Presentation.Views
         public static readonly Vector2 ReferenceResolution = new Vector2(1080f, 1920f);
         private const float TextOutlineRatio = 0.07f;
         private const float ButtonTextRatio = 0.42f;
+        private const float ButtonTextWidthFill = 0.8f;
         private const float ButtonLipOffset = 10f;
 
         public static Canvas CreateCanvas(string name, int sortingOrder)
@@ -106,7 +107,8 @@ namespace SheepStrike.Presentation.Views
             AddBox(rect, art.BevelBox, color, true);
             var labelRect = Stretch("Label", rect);
             labelRect.offsetMin = new Vector2(0f, ButtonLipOffset);
-            var text = AddLabel(labelRect, art.Font, Mathf.RoundToInt(size.y * ButtonTextRatio), TextAnchor.MiddleCenter);
+            int fontSize = Mathf.RoundToInt(Mathf.Min(size.y * ButtonTextRatio, size.x * ButtonTextWidthFill / Mathf.Max(1, label.Length)));
+            var text = AddLabel(labelRect, art.Font, fontSize, TextAnchor.MiddleCenter);
             text.text = label;
             return AddButton(rect, onClick);
         }

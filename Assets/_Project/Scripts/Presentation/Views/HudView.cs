@@ -13,6 +13,8 @@ namespace SheepStrike.Presentation.Views
     public sealed class HudView : MonoBehaviour
     {
         private const float TopBarHeight = 230f;
+        private const float PillsX = 250f;
+        private const float GearSize = 100f;
         private const float ToastSeconds = 1.6f;
         private const float ToastFadeSeconds = 0.4f;
         private const int ComboVisibleFrom = 3;
@@ -38,6 +40,7 @@ namespace SheepStrike.Presentation.Views
 
         /// <summary>Raised for every HUD button press except the sheep, which the presenter voices itself.</summary>
         public Action ButtonPressed;
+        public Action SettingsTapped;
 
         private ArtLibrary _art;
         private RectTransform _topBar;
@@ -49,6 +52,7 @@ namespace SheepStrike.Presentation.Views
         private Text _combo;
         private ScaleAnimator _comboScale;
         private int _comboTier;
+        private bool _comboEnabled = true;
         private Text _toast;
         private Image _toastPill;
         private float _toastLeft;
@@ -87,6 +91,16 @@ namespace SheepStrike.Presentation.Views
             HookButtonSounds(root);
         }
 
+        /// <summary>Hides the level HUD (top bar, pen, queue, boosters) behind the home screen; toasts still show.</summary>
+        public void SetGameplayVisible(bool visible)
+        {
+            _topBar.gameObject.SetActive(visible);
+            Slots.Root.gameObject.SetActive(visible);
+            Queue.Root.gameObject.SetActive(visible);
+            Boosters.Root.gameObject.SetActive(visible);
+            if (!visible) _combo.gameObject.SetActive(false);
+        }
+
         public void SetLevel(int number, string targetId)
         {
             _level.text = Texts.Level(number);
@@ -101,9 +115,16 @@ namespace SheepStrike.Presentation.Views
         public void SetTimer(float seconds) => _timer.text = Texts.Timer(seconds);
 
         /// <param name="tier">Cosmetic tier from <see cref="ComboTier"/>; grows and recolours the counter.</param>
+        /// <summary>The player can hide the combo counter in settings.</summary>
+        public void SetComboEnabled(bool enabled)
+        {
+            _comboEnabled = enabled;
+            if (!enabled) _combo.gameObject.SetActive(false);
+        }
+
         public void SetCombo(int combo, int tier)
         {
-            bool visible = combo >= ComboVisibleFrom;
+            bool visible = _comboEnabled && combo >= ComboVisibleFrom;
             _combo.gameObject.SetActive(visible);
             if (!visible) return;
             _combo.text = Texts.Combo(combo);
@@ -169,16 +190,17 @@ namespace SheepStrike.Presentation.Views
         private void BuildTopBar(RectTransform root)
         {
             _topBar = UiFactory.Rect("TopBar", root, new Vector2(0.5f, 1f), new Vector2(0f, -TopBarHeight * 0.5f), new Vector2(1080f, TopBarHeight));
+            BuildSettingsButton();
 
-            var levelPill = UiFactory.Rect("LevelPill", _topBar, new Vector2(0f, 0.5f), new Vector2(160f, 40f), new Vector2(250f, 90f));
+            var levelPill = UiFactory.Rect("LevelPill", _topBar, new Vector2(0f, 0.5f), new Vector2(PillsX, 40f), new Vector2(250f, 90f));
             UiFactory.AddBox(levelPill, _art.FlatBox, Palette.PanelDark);
             _level = UiFactory.AddLabel(UiFactory.Stretch("Level", levelPill), _art.Font, 52, TextAnchor.MiddleCenter);
 
-            var timerPill = UiFactory.Rect("TimerPill", _topBar, new Vector2(0f, 0.5f), new Vector2(160f, -48f), new Vector2(190f, 64f));
+            var timerPill = UiFactory.Rect("TimerPill", _topBar, new Vector2(0f, 0.5f), new Vector2(PillsX, -48f), new Vector2(190f, 64f));
             UiFactory.AddBox(timerPill, _art.FlatBox, Palette.PillLight);
             _timer = UiFactory.AddLabel(UiFactory.Stretch("Timer", timerPill), _art.Font, 42, TextAnchor.MiddleCenter);
 
-            var hint = UiFactory.AddLabel(UiFactory.Rect("RotateHint", _topBar, new Vector2(0f, 0.5f), new Vector2(160f, -110f), new Vector2(260f, 44f)), _art.Font, 32, TextAnchor.MiddleCenter);
+            var hint = UiFactory.AddLabel(UiFactory.Rect("RotateHint", _topBar, new Vector2(0f, 0.5f), new Vector2(PillsX, -110f), new Vector2(260f, 44f)), _art.Font, 32, TextAnchor.MiddleCenter);
             hint.text = Texts.RotateHint;
 
             var targetRect = UiFactory.Rect("TargetIcon", _topBar, new Vector2(0.5f, 0.5f), new Vector2(0f, 24f), new Vector2(140f, 140f));
@@ -186,6 +208,15 @@ namespace SheepStrike.Presentation.Views
             _target = UiFactory.AddLabel(UiFactory.Rect("Target", _topBar, new Vector2(0.5f, 0.5f), new Vector2(0f, -72f), new Vector2(400f, 54f)), _art.Font, 40, TextAnchor.MiddleCenter);
 
             BuildRemainingPill();
+        }
+
+        private void BuildSettingsButton()
+        {
+            var rect = UiFactory.Rect("Settings", _topBar, new Vector2(0f, 0.5f), new Vector2(70f, 40f), Vector2.one * GearSize);
+            UiFactory.AddImage(rect, _art.Disc, Palette.PanelDark, true);
+            var gear = UiFactory.Rect("Gear", rect, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one * (GearSize * 0.78f));
+            UiFactory.AddImage(gear, _art.Gear, Palette.MenuIcon);
+            UiFactory.AddButton(rect, () => SettingsTapped?.Invoke());
         }
 
         private void BuildRemainingPill()

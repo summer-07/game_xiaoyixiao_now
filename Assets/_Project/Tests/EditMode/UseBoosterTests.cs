@@ -19,11 +19,14 @@ namespace SheepStrike.Tests
             public void VibrateShort() { }
             public void Share(string title) { }
             public void ReportLevelResult(int level, bool won, float secondsUsed) { }
+            public void ShowLeaderboard(int highestLevel) { }
+            public void AddToDesktop(Action<bool> onFinished) => onFinished(false);
         }
 
         private sealed class FixedCatalog : ILevelCatalog
         {
             public LevelDefinition Load(int levelNumber) => TestLevels.HiddenCore(slots: 2);
+            public string TargetOf(int levelNumber) => "wolf";
         }
 
         private sealed class MemoryProgress : IProgressStore

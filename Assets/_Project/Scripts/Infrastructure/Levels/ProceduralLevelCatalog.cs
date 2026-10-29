@@ -31,7 +31,7 @@ namespace SheepStrike.Infrastructure.Levels
                 Columns = levelNumber <= 2 ? 4 : 5,
                 MinAmmoPerSheep = 10 + Math.Min(lap * 2, 10),
                 MaxAmmoPerSheep = 40 + Math.Min(lap * 5, 40),
-                StartingSlots = lap == 0 ? 5 : 4,
+                StartingSlots = 5,
                 MaxSlots = 7,
                 TimeLimitSeconds = Math.Max(150f, 300f - index * 8f),
                 FireIntervalSeconds = 0.09f,
@@ -40,6 +40,12 @@ namespace SheepStrike.Infrastructure.Levels
             };
 
             return LevelGenerator.Generate(levelNumber, animal, AnimalLibrary.Build(animal), tuning, Seed(levelNumber));
+        }
+
+        public string TargetOf(int levelNumber)
+        {
+            if (levelNumber < 1) throw new ArgumentOutOfRangeException(nameof(levelNumber));
+            return AnimalLibrary.Rotation[(levelNumber - 1) % AnimalLibrary.Rotation.Count];
         }
 
         /// <summary>One hidden colour on the first levels, a new one every few levels after that, up to four.</summary>

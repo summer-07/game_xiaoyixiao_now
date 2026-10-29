@@ -81,7 +81,7 @@ namespace SheepStrike.Domain.Session
             }
 
             var sheep = Queue.Take(column, row);
-            Pad.TryPlace(sheep, out int slot);
+            Pad.TryPlaceNearest(sheep, column, Queue.ColumnCount, out int slot);
             RefillQueue(column);
             _cooldowns[slot] = DeployTravelSeconds;
             if (row != 0) IsShepherdDogActive = false;

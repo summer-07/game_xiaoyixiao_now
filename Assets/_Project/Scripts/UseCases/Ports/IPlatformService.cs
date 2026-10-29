@@ -21,5 +21,11 @@ namespace SheepStrike.UseCases.Ports
         void Share(string title);
 
         void ReportLevelResult(int level, bool won, float secondsUsed);
+
+        /// <summary>Opens the platform's own friends / global ranking, ranked by highest level reached.</summary>
+        void ShowLeaderboard(int highestLevel);
+
+        /// <param name="onFinished">true when the platform added the game to the home screen.</param>
+        void AddToDesktop(Action<bool> onFinished);
     }
 }

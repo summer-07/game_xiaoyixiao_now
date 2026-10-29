@@ -69,17 +69,30 @@ namespace SheepStrike.Presentation.Presenters
 
         private GameSession Session => _context.Session;
 
-        public void BeginFromProgress()
+        /// <summary>While paused (home screen, settings) the level doesn't advance; the animal still idles.</summary>
+        public bool IsPaused { get; set; }
+
+        /// <summary>Gated by the player's vibration setting.</summary>
+        public bool VibrationEnabled { get; set; } = true;
+
+        public int CurrentLevel => Session?.Level.Number ?? 1;
+
+        /// <summary>Loads a level and shows its animal without starting the clock, for the home screen.</summary>
+        public void Preview(int levelNumber)
         {
-            var session = _startLevel.ContinueFromProgress();
-            Present(session);
+            Begin(levelNumber);
+            IsPaused = true;
         }
 
-        public void Begin(int levelNumber) => Present(_startLevel.Execute(levelNumber));
+        public void Begin(int levelNumber)
+        {
+            IsPaused = false;
+            Present(_startLevel.Execute(levelNumber));
+        }
 
         public void Tick(float deltaSeconds)
         {
-            if (Session == null) return;
+            if (Session == null || IsPaused) return;
 
             Session.SetView(_views.Model.ViewFrom(_views.Camera.Camera));
             Session.Tick(deltaSeconds);
@@ -250,13 +263,13 @@ namespace SheepStrike.Presentation.Presenters
             _views.Hud.ShowResult(won, won ? Texts.Won(animal, Session.BestCombo) : Texts.Lost(animal));
             if (won) _views.Sound.Win();
             else _views.Sound.Lose();
-            if (won) _platform.VibrateShort();
+            if (won && VibrationEnabled) _platform.VibrateShort();
         }
 
         private void RefreshQueueAndPad()
         {
             _views.Hud.Queue.Render(Session.Queue, Session.IsShepherdDogActive);
-            _views.Hud.Slots.SetCapacity(Session.Pad.Capacity);
+            _views.Hud.Slots.SetPen(Session.Pad.Capacity, Session.Pad.PositionOf);
         }
 
         private void RefreshBoosters()

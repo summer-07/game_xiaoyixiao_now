@@ -21,6 +21,7 @@ namespace SheepStrike.Presentation.Theme
             FlatBox = ShapeSprites.FlatBox();
             Disc = ShapeSprites.Disc();
             Ring = ShapeSprites.Ring();
+            Gear = ShapeSprites.Gear();
         }
 
         public Font Font { get; }
@@ -34,6 +35,8 @@ namespace SheepStrike.Presentation.Theme
         public Sprite Disc { get; }
 
         public Sprite Ring { get; }
+
+        public Sprite Gear { get; }
 
         public Sprite SheepIcon => Load("Icons/sheep_shooter");
         public Sprite SlotRing => Load("UI/slot_ring");

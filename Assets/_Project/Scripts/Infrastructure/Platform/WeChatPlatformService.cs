@@ -48,6 +48,17 @@ namespace SheepStrike.Infrastructure.Platform
         public void ReportLevelResult(int level, bool won, float secondsUsed) =>
             Debug.Log($"[WeChat] level={level} won={won} seconds={secondsUsed:0.0}");
 
+        // TODO: open the host's ranking with the SDK version in use (friends + global, keyed by highest level).
+        public void ShowLeaderboard(int highestLevel) =>
+            Debug.LogWarning($"[WeChat] Leaderboard not wired yet (highest level {highestLevel}).");
+
+        // TODO: call the host's add-to-desktop / shortcut API for the SDK version in use.
+        public void AddToDesktop(Action<bool> onFinished)
+        {
+            Debug.LogWarning("[WeChat] Add to desktop not wired yet.");
+            onFinished(false);
+        }
+
         private void CompleteReward(bool rewarded)
         {
             var callback = _pendingReward;

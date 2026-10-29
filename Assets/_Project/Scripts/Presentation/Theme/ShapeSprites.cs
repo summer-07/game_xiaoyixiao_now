@@ -16,6 +16,10 @@ namespace SheepStrike.Presentation.Theme
         private const float BodyShade = 0.94f;
         private const int DiscSize = 128;
         private const float RingThickness = 0.16f;
+        private const int GearTeeth = 8;
+        private const float GearBody = 0.34f;
+        private const float GearToothLength = 0.12f;
+        private const float GearHole = 0.13f;
 
         public static Sprite BevelBox() => CreateBox(true);
 
@@ -24,6 +28,28 @@ namespace SheepStrike.Presentation.Theme
         public static Sprite Disc() => CreateRound(0f);
 
         public static Sprite Ring() => CreateRound(1f - RingThickness * 2f);
+
+        /// <summary>A cog for the settings button: a disc with square-ish teeth and a hole.</summary>
+        public static Sprite Gear()
+        {
+            var texture = NewTexture(DiscSize);
+            float half = DiscSize * 0.5f;
+            for (int y = 0; y < DiscSize; y++)
+            {
+                for (int x = 0; x < DiscSize; x++)
+                {
+                    var offset = new Vector2(x + 0.5f - half, y + 0.5f - half) / DiscSize;
+                    float angle = Mathf.Atan2(offset.y, offset.x);
+                    float tooth = Mathf.Clamp01(Mathf.Cos(angle * GearTeeth) * 3f + 0.5f);
+                    float outer = GearBody + GearToothLength * tooth;
+                    float distance = offset.magnitude;
+                    float alpha = Mathf.Clamp01((outer - distance) * DiscSize) * Mathf.Clamp01((distance - GearHole) * DiscSize);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+            }
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0, 0, DiscSize, DiscSize), new Vector2(0.5f, 0.5f));
+        }
 
         private static Sprite CreateBox(bool bevel)
         {

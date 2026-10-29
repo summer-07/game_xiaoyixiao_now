@@ -29,6 +29,15 @@ namespace SheepStrike.Presentation.Theme
         public static readonly Color Dim = new Color(0f, 0f, 0f, 0.6f);
         public static readonly Color Disabled = new Color(1f, 1f, 1f, 0.35f);
         public static readonly Color QueueBackRow = new Color(0.78f, 0.78f, 0.82f, 1f);
+        public static readonly Color Wood = new Color32(0xC9, 0x7E, 0x45, 0xFF);
+        public static readonly Color WoodLight = new Color32(0xF6, 0xDF, 0xBE, 0xFF);
+        public static readonly Color Paper = new Color32(0xFF, 0xF4, 0xE2, 0xFF);
+        public static readonly Color PaperLine = new Color32(0xEE, 0xD6, 0xB4, 0xFF);
+        public static readonly Color WoodText = new Color32(0xC0, 0x68, 0x3A, 0xFF);
+        public static readonly Color Clip = new Color32(0xD8, 0xDD, 0xE6, 0xFF);
+        public static readonly Color CheckGreen = new Color32(0x3C, 0xC0, 0x3C, 0xFF);
+        public static readonly Color CloseRed = new Color32(0xF0, 0x3C, 0x32, 0xFF);
+        public static readonly Color MenuIcon = new Color32(0xFF, 0xFF, 0xFF, 0xF2);
 
         public static Color Of(GameColor color)
         {

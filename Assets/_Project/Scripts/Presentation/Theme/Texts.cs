@@ -24,8 +24,30 @@ namespace SheepStrike.Presentation.Theme
         public const string AdBadge = "视频";
         public const string Unlock = "解锁";
         public const string Assisted = "羊群士气大增：这次一定能赢！";
+        public const string Settings = "设置";
+        public const string Music = "音乐";
+        public const string Sound = "音效";
+        public const string Vibration = "震动";
+        public const string ComboDisplay = "连击显示";
+        public const string Home = "主界面";
+        public const string Restart = "重新开始";
+        public const string SkipLevel = "跳过关卡";
+        public const string Continue = "继续游戏";
+        public const string Collection = "图鉴";
+        public const string Replay = "重玩";
+        public const string PreviousPage = "上一页";
+        public const string NextPage = "下一页";
+        public const string StartGame = "开始游戏";
+        public const string Leaderboard = "排行榜";
+        public const string AddToDesktop = "添加桌面";
+        public const string DesktopUnavailable = "请在抖音或微信中添加到桌面";
+        public const string Close = "×";
+        public const string Locked = "?";
 
         public static string Level(int number) => $"第 {number} 关";
+        public static string Unlocked(int count) => $"已解锁({count})";
+        public static string PageNumber(int page) => $"第 {page} 页";
+        public static string Version(string version) => $"V{version}";
         public static string Remaining(int count) => count.ToString();
         public static string Combo(int combo) => $"连击 x {combo}";
 

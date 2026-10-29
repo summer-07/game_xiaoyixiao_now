@@ -39,10 +39,13 @@ namespace SheepStrike.Presentation.Views
 
         private readonly Dictionary<BoosterType, Widget> _widgets = new Dictionary<BoosterType, Widget>();
 
+        public RectTransform Root { get; }
+
         public BoosterBarView(Transform parent, ArtLibrary art, Action<BoosterType> onTap)
         {
             var bar = UiFactory.Rect("BoosterBar", parent, new Vector2(0.5f, 0f), new Vector2(0f, Height * 0.5f - BarCornerOverlap * 0.5f), new Vector2(1080f, Height + BarCornerOverlap));
             UiFactory.AddBox(bar, art.FlatBox, Palette.BoosterBar);
+            Root = bar;
             var highlight = UiFactory.Rect("Highlight", bar, new Vector2(0.5f, 1f), new Vector2(0f, -HighlightHeight * 0.5f - 4f), new Vector2(1040f, HighlightHeight));
             UiFactory.AddBox(highlight, art.FlatBox, new Color(1f, 1f, 1f, 0.25f)).pixelsPerUnitMultiplier = 4f;
 

@@ -14,8 +14,11 @@ namespace SheepStrike.Presentation.Audio
         private const float HitCooldown = 0.035f;
         private const float PitchJitter = 0.06f;
         private const float HitPitchPerTier = 0.08f;
+        private const float MusicVolume = 0.35f;
 
         private AudioSource[] _sources;
+        private AudioSource _music;
+        private bool _soundOn = true;
         private int _nextSource;
         private float _lastFire = -1f;
         private float _lastHit = -1f;
@@ -40,6 +43,20 @@ namespace SheepStrike.Presentation.Audio
                 _sources[i].playOnAwake = false;
             }
             BuildClips();
+
+            _music = gameObject.AddComponent<AudioSource>();
+            _music.clip = MusicLoop.Build();
+            _music.loop = true;
+            _music.volume = MusicVolume;
+            _music.playOnAwake = false;
+        }
+
+        public void SetSoundEnabled(bool on) => _soundOn = on;
+
+        public void SetMusicEnabled(bool on)
+        {
+            if (on && !_music.isPlaying) _music.Play();
+            else if (!on) _music.Stop();
         }
 
         public void Tap() => Play(_tap, 1f);
@@ -78,6 +95,7 @@ namespace SheepStrike.Presentation.Audio
 
         private void Play(AudioClip clip, float pitch)
         {
+            if (!_soundOn) return;
             var source = _sources[_nextSource];
             _nextSource = (_nextSource + 1) % _sources.Length;
             source.pitch = pitch;

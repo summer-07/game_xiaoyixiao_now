@@ -83,6 +83,8 @@ namespace SheepStrike.Presentation.Views
             }
         }
 
+        public RectTransform Root => _root;
+
         public Vector2 ScreenPositionOf(int column, int row) =>
             RectTransformUtility.WorldToScreenPoint(null, _cells[column, row].Rect.position);
 

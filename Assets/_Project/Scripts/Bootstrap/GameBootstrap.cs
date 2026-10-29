@@ -6,6 +6,7 @@ using SheepStrike.Presentation.Presenters;
 using SheepStrike.Presentation.Theme;
 using SheepStrike.Presentation.Views;
 using SheepStrike.UseCases.Interactors;
+using SheepStrike.UseCases.Ports;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,8 +19,10 @@ namespace SheepStrike.Bootstrap
     public sealed class GameBootstrap : MonoBehaviour
     {
         private const int MaxSlots = 7;
+        private const int MenuSortingOrder = 20;
 
         private GamePresenter _presenter;
+        private MenuPresenter _menu;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void EnsureExists()
@@ -74,11 +77,38 @@ namespace SheepStrike.Bootstrap
                     Camera = new CameraRig(camera),
                     Sound = sound
                 });
+
+            _menu = CreateMenu(art, hud, sound, progress, catalog, platform);
         }
 
-        private void Start() => _presenter.BeginFromProgress();
+        private void Start() => _menu.ShowHome();
 
         private void Update() => _presenter.Tick(Time.deltaTime);
+
+        private MenuPresenter CreateMenu(ArtLibrary art, HudView hud, SoundBoard sound, PlayerPrefsProgressStore progress, ProceduralLevelCatalog catalog, IPlatformService platform)
+        {
+            var root = (RectTransform)UiFactory.CreateCanvas("Menu", MenuSortingOrder).transform;
+            MenuPresenter menu = null;
+            var views = new MenuPresenter.ViewSet
+            {
+                Home = new HomeView(root, art),
+                Settings = new SettingsPanelView(root, art, UnityEngine.Application.version),
+                Collection = new CollectionPanelView(root, art,
+                    level => menu.OnCollectionReplay(level),
+                    page => menu.OnCollectionPageRequested(page),
+                    () => menu.OnCollectionClosed()),
+                Hud = hud,
+                Sound = sound
+            };
+            menu = new MenuPresenter(
+                _presenter,
+                new ChangeSettings(new PlayerPrefsSettingsStore()),
+                new SkipLevel(progress, platform),
+                new BrowseCollection(progress, catalog),
+                platform,
+                views);
+            return menu;
+        }
 
         private T CreateChild<T>(string name) where T : Component
         {

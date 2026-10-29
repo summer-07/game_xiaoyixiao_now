@@ -65,6 +65,7 @@ namespace SheepStrike.Presentation.Views
         private Image _toastPill;
         private GameObject _settingsButton;
         private GameObject _timerGroup;
+        private RectTransform _safeArea;
         private float _toastLeft;
         private RectTransform _resultPanel;
         private Text _resultText;
@@ -81,17 +82,20 @@ namespace SheepStrike.Presentation.Views
         {
             _art = art;
             var root = (RectTransform)transform;
+            var safe = UiFactory.Stretch("SafeArea", root);
+            safe.gameObject.AddComponent<SafeAreaFitter>();
 
-            BuildTopBar(root);
-            Boosters = new BoosterBarView(root, art, b => BoosterTapped?.Invoke(b));
-            Queue = new SheepQueueView(root, QueueBottom, art, (c, r) => SheepTapped?.Invoke(c, r));
-            Slots = new SlotRowView(root, SlotsBottom, art, maxSlots,
+            _safeArea = safe;
+            BuildTopBar(safe);
+            Boosters = new BoosterBarView(safe, art, b => BoosterTapped?.Invoke(b));
+            Queue = new SheepQueueView(safe, QueueBottom, art, (c, r) => SheepTapped?.Invoke(c, r));
+            Slots = new SlotRowView(safe, SlotsBottom, art, maxSlots,
                 () => BoosterTapped?.Invoke(BoosterType.ExtraPen));
 
-            _combo = UiFactory.AddLabel(UiFactory.Rect("Combo", root, new Vector2(0.5f, 1f), new Vector2(190f, -TopBarHeight - 70f), new Vector2(560f, 110f)), art.Font, 84, TextAnchor.MiddleCenter, Palette.Combo);
+            _combo = UiFactory.AddLabel(UiFactory.Rect("Combo", safe, new Vector2(0.5f, 1f), new Vector2(190f, -TopBarHeight - 70f), new Vector2(560f, 110f)), art.Font, 84, TextAnchor.MiddleCenter, Palette.Combo);
             _comboScale = ScaleAnimator.On(_combo);
-            Flights = new DeployFlightView(root, art);
-            ComboFx = new ComboFxView(root, art);
+            Flights = new DeployFlightView(safe, art);
+            ComboFx = new ComboFxView(safe, art);
             BuildToast(root);
 
             BuildResultPanel(root);
@@ -230,7 +234,7 @@ namespace SheepStrike.Presentation.Views
 
         private void BuildSettingsButton()
         {
-            var rect = UiFactory.Rect("Settings", (RectTransform)transform, new Vector2(0f, 1f), GearPosition, Vector2.one * GearSize);
+            var rect = UiFactory.Rect("Settings", _safeArea, new Vector2(0f, 1f), GearPosition, Vector2.one * GearSize);
             UiFactory.AddImage(rect, _art.Disc, Palette.PanelDark, true);
             var gear = UiFactory.Rect("Gear", rect, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one * (GearSize * 0.78f));
             UiFactory.AddImage(gear, _art.Gear, Palette.MenuIcon);

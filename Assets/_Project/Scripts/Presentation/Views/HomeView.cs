@@ -33,6 +33,7 @@ namespace SheepStrike.Presentation.Views
         public HomeView(RectTransform parent, ArtLibrary art)
         {
             _root = UiFactory.Stretch("Home", parent);
+            _root.gameObject.AddComponent<SafeAreaFitter>();
             BuildGear(art);
             _start = BuildStartButton(art, out _level);
             BuildCollectionButton(art, SideBottom + SideStep * 2f);

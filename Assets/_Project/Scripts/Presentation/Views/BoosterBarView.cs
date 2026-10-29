@@ -14,7 +14,11 @@ namespace SheepStrike.Presentation.Views
         private const float ButtonSize = 160f;
         private const float RimWidth = 8f;
         private const float IconFill = 0.72f;
-        private const float BarCornerOverlap = 40f;
+        /// <summary>Height of the button centres above the safe area's bottom edge.</summary>
+        private const float ButtonCenterY = 143f;
+
+        /// <summary>The bar lives in the safe area but its background runs on below it, down past the gesture bar.</summary>
+        private const float BottomBleed = 400f;
         private const float HighlightScale = 1.12f;
         private const float BadgeSize = 62f;
         private const float ShadowDrop = 10f;
@@ -43,7 +47,8 @@ namespace SheepStrike.Presentation.Views
 
         public BoosterBarView(Transform parent, ArtLibrary art, Action<BoosterType> onTap)
         {
-            var bar = UiFactory.Rect("BoosterBar", parent, new Vector2(0.5f, 0f), new Vector2(0f, Height * 0.5f - BarCornerOverlap * 0.5f), new Vector2(1080f, Height + BarCornerOverlap));
+            float barCenterY = (Height - BottomBleed) * 0.5f;
+            var bar = UiFactory.Rect("BoosterBar", parent, new Vector2(0.5f, 0f), new Vector2(0f, barCenterY), new Vector2(1080f, Height + BottomBleed));
             UiFactory.AddBox(bar, art.FlatBox, Palette.BoosterBar);
             Root = bar;
             var highlight = UiFactory.Rect("Highlight", bar, new Vector2(0.5f, 1f), new Vector2(0f, -HighlightHeight * 0.5f - 4f), new Vector2(1040f, HighlightHeight));
@@ -53,7 +58,7 @@ namespace SheepStrike.Presentation.Views
             for (int i = 0; i < Order.Length; i++)
             {
                 var booster = Order[i];
-                var position = new Vector2(-540f + step * (i + 0.5f), 48f);
+                var position = new Vector2(-540f + step * (i + 0.5f), ButtonCenterY - barCenterY);
                 _widgets.Add(booster, CreateWidget(bar, art, booster, position, () => onTap(booster)));
             }
         }

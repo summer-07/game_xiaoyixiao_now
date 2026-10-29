@@ -20,6 +20,7 @@ namespace SheepStrike.Bootstrap
     {
         private const int MaxSlots = 7;
         private const int MenuSortingOrder = 20;
+        private const int SplashSortingOrder = 50;
 
         private GamePresenter _presenter;
         private MenuPresenter _menu;
@@ -79,9 +80,13 @@ namespace SheepStrike.Bootstrap
                 });
 
             _menu = CreateMenu(art, hud, sound, progress, catalog, platform);
+            _splash = UiFactory.CreateCanvas("Splash", SplashSortingOrder).gameObject.AddComponent<SplashView>();
+            _splash.Build(art);
         }
 
-        private void Start() => _menu.ShowHome();
+        private SplashView _splash;
+
+        private void Start() => _splash.Play(_menu.ShowHome);
 
         private void Update() => _presenter.Tick(Time.deltaTime);
 

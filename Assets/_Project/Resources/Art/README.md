@@ -16,4 +16,6 @@ Original art generated with the built-in image tool: bright, cute, chunky toy-li
 | [UI/slot_ring.png](UI/slot_ring.png) | 256 × 256 | Top-down wooden launch ring with a transparent empty center. |
 | [UI/button_round.png](UI/button_round.png) | 256 × 256 | Blank glossy neutral-grey round button for runtime tinting. |
 | [Backgrounds/bg_meadow_dusk.png](Backgrounds/bg_meadow_dusk.png) | 1080 × 1920 | Opaque low-contrast lavender dusk sky and gentle meadow hills. |
-| [UI/app_icon.png](UI/app_icon.png) | 512 × 512 | Opaque rounded-square scene of a helmeted sheep launching wool at a voxel wolf. |
+| [Backgrounds/splash.jpg](Backgrounds/splash.jpg) | 1080 × 1920 | Opaque splash: colourful round sheep launching glowing wool balls at a surprised voxel wolf; empty sky on top for the title. |
+
+The Android app icon lives outside Resources at `Assets/_Project/Branding/app_icon.png` (512 × 512, opaque): a chubby sheep launching a wool ball among bursting coloured cubes. Both were generated with Codex image generation and contain no text; the title is drawn in game with GameFont.

@@ -44,6 +44,7 @@ namespace SheepStrike.Presentation.Theme
         public Sprite SlotRing => Load("UI/slot_ring");
         public Sprite RoundButton => Load("UI/button_round");
         public Sprite Background => Load("Backgrounds/bg_meadow_dusk");
+        public Sprite Splash => Load("Backgrounds/splash");
 
         public Sprite Target(string targetId) => Load("Icons/target_" + (targetId == "alpha_wolf" ? "wolf" : targetId));
 

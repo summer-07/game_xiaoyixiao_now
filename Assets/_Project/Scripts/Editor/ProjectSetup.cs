@@ -14,7 +14,7 @@ namespace SheepStrike.EditorTools
     public static class ProjectSetup
     {
         public const string ScenePath = "Assets/_Project/Scenes/Main.unity";
-        private const string ProductName = "羊羊大反击";
+        public const string ProductName = "小羊消消";
 
         static ProjectSetup()
         {

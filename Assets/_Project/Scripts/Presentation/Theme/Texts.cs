@@ -6,7 +6,7 @@ namespace SheepStrike.Presentation.Theme
     /// <summary>All player-facing Chinese copy in one place.</summary>
     public static class Texts
     {
-        public const string GameTitle = "羊羊大反击";
+        public const string GameTitle = "小羊消消";
         public const string Next = "下一关";
         public const string Retry = "再来一次";
         public const string Share = "叫朋友来帮忙";

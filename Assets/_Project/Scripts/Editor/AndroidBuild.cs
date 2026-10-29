@@ -16,6 +16,7 @@ namespace SheepStrike.EditorTools
     public static class AndroidBuild
     {
         private const string ApplicationId = "com.summer07.sheepstrike";
+        private const string IconPath = "Assets/_Project/Branding/app_icon.png";
         private const string OutputPath = "../build/SheepStrike.apk";
         private const string RequestPath = "../build/build-request.txt";
         private const string ResultPath = "../build/build-result.txt";
@@ -85,6 +86,11 @@ namespace SheepStrike.EditorTools
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+            PlayerSettings.productName = ProjectSetup.ProductName;
+            PlayerSettings.SplashScreen.show = false; // the game shows its own splash
+
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(IconPath);
+            if (icon != null) PlayerSettings.SetIcons(UnityEditor.Build.NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
         }
     }
 }

@@ -33,8 +33,11 @@ namespace SheepStrike.Infrastructure.Platform
             Debug.Log($"[Douyin] level={level} won={won} seconds={secondsUsed:0.0}");
 
         // TODO: open the host's ranking with the SDK version in use (friends + global, keyed by highest level).
-        public void ShowLeaderboard(int highestLevel) =>
+        public bool TryShowLeaderboard(int highestLevel)
+        {
             Debug.LogWarning($"[Douyin] Leaderboard not wired yet (highest level {highestLevel}).");
+            return false;
+        }
 
         // TODO: call the host's add-to-desktop / shortcut API for the SDK version in use.
         public void AddToDesktop(Action<bool> onFinished)

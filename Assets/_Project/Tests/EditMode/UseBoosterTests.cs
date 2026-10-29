@@ -19,7 +19,7 @@ namespace SheepStrike.Tests
             public void VibrateShort() { }
             public void Share(string title) { }
             public void ReportLevelResult(int level, bool won, float secondsUsed) { }
-            public void ShowLeaderboard(int highestLevel) { }
+            public bool TryShowLeaderboard(int highestLevel) => false;
             public void AddToDesktop(Action<bool> onFinished) => onFinished(false);
         }
 

@@ -43,9 +43,15 @@ namespace SheepStrike.Presentation.Theme
         public const string DesktopUnavailable = "请在抖音或微信中添加到桌面";
         public const string Close = "×";
         public const string Locked = "?";
+        public const string FriendsTab = "好友榜";
+        public const string GlobalTab = "总榜";
+        public const string Me = "我";
+        public const string MyBest = "我的最佳纪录";
+        public const string LeaderboardOffline = "发布到抖音后可查看好友和全国排行";
 
         public static string Level(int number) => $"第 {number} 关";
         public static string Unlocked(int count) => $"已解锁({count})";
+        public static string LevelsReached(int level) => $"{level}关";
         public static string PageNumber(int page) => $"第 {page} 页";
         public static string Version(string version) => $"V{version}";
         public static string Remaining(int count) => count.ToString();

@@ -22,6 +22,7 @@ namespace SheepStrike.Presentation.Theme
             Disc = ShapeSprites.Disc();
             Ring = ShapeSprites.Ring();
             Gear = ShapeSprites.Gear();
+            SheepIcon = ShapeSprites.SheepToken();
         }
 
         public Font Font { get; }
@@ -38,7 +39,8 @@ namespace SheepStrike.Presentation.Theme
 
         public Sprite Gear { get; }
 
-        public Sprite SheepIcon => Load("Icons/sheep_shooter");
+        /// <summary>The flat sheep token drawn in code; the painted sheep_shooter.png was too busy to read once tinted.</summary>
+        public Sprite SheepIcon { get; }
         public Sprite SlotRing => Load("UI/slot_ring");
         public Sprite RoundButton => Load("UI/button_round");
         public Sprite Background => Load("Backgrounds/bg_meadow_dusk");

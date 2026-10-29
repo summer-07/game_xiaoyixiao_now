@@ -175,6 +175,7 @@ namespace SheepStrike.Presentation.Presenters
 
                 case BoosterApplied applied:
                     _views.Sound.Booster();
+                    Vibrate();
                     _views.Hud.Toast(applied.Booster == BoosterType.ShepherdDog ? Texts.DogReady : Texts.Booster(applied.Booster) + "！");
                     if (applied.Booster == BoosterType.ExtraPen) _views.Hud.HideOverlays();
                     RefreshQueueAndPad();
@@ -207,6 +208,7 @@ namespace SheepStrike.Presentation.Presenters
             {
                 hud.Slots.SetSheep(deployed.Slot, sheep.Color, sheep.Ammo);
                 _views.Sound.Land();
+                Vibrate();
             });
         }
 
@@ -217,6 +219,7 @@ namespace SheepStrike.Presentation.Presenters
             {
                 _views.Hud.ComboFx.Celebrate(tier);
                 _views.Sound.Fanfare(tier);
+                Vibrate();
             }
             _comboTier = tier;
             _views.Hud.SetCombo(combo, tier);
@@ -263,7 +266,13 @@ namespace SheepStrike.Presentation.Presenters
             _views.Hud.ShowResult(won, won ? Texts.Won(animal, Session.BestCombo) : Texts.Lost(animal));
             if (won) _views.Sound.Win();
             else _views.Sound.Lose();
-            if (won && VibrationEnabled) _platform.VibrateShort();
+            if (won) Vibrate();
+        }
+
+        /// <summary>A short haptic tick for landings, boosters, combo milestones and wins, if the player allows it.</summary>
+        private void Vibrate()
+        {
+            if (VibrationEnabled) _platform.VibrateShort();
         }
 
         private void RefreshQueueAndPad()

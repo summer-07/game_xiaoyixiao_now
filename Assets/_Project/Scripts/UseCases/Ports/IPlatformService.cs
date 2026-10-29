@@ -22,8 +22,9 @@ namespace SheepStrike.UseCases.Ports
 
         void ReportLevelResult(int level, bool won, float secondsUsed);
 
-        /// <summary>Opens the platform's own friends / global ranking, ranked by highest level reached.</summary>
-        void ShowLeaderboard(int highestLevel);
+        /// <summary>Opens the host's own friends / global ranking, ranked by highest level reached.</summary>
+        /// <returns>false when the host has none (Editor, plain Android); the game then shows its own panel.</returns>
+        bool TryShowLeaderboard(int highestLevel);
 
         /// <param name="onFinished">true when the platform added the game to the home screen.</param>
         void AddToDesktop(Action<bool> onFinished);

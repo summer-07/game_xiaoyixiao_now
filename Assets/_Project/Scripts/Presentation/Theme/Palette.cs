@@ -3,7 +3,10 @@ using UnityEngine;
 
 namespace SheepStrike.Presentation.Theme
 {
-    /// <summary>Toy-like, saturated colours: flat purple sky, dark rounded pills, chunky bevelled buttons.</summary>
+    /// <summary>
+    /// Toy-like, saturated colours: flat purple sky, dark rounded pills, chunky bevelled buttons.
+    /// Game colours are pushed apart so every sheep reads at a glance; "Cream" is drawn as green for that reason.
+    /// </summary>
     public static class Palette
     {
         public static readonly Color Background = new Color32(0x6B, 0x63, 0x98, 0xFF);
@@ -44,15 +47,15 @@ namespace SheepStrike.Presentation.Theme
             switch (color)
             {
                 case GameColor.White: return new Color32(0xF7, 0xF7, 0xF4, 0xFF);
-                case GameColor.Grey: return new Color32(0xA9, 0xB1, 0xD6, 0xFF);
-                case GameColor.Black: return new Color32(0x2A, 0x26, 0x33, 0xFF);
+                case GameColor.Grey: return new Color32(0x8E, 0xA6, 0xE8, 0xFF);
+                case GameColor.Black: return new Color32(0x2B, 0x28, 0x33, 0xFF);
                 case GameColor.Orange: return new Color32(0xFF, 0x8A, 0x1F, 0xFF);
-                case GameColor.Brown: return new Color32(0x8E, 0x4E, 0x2C, 0xFF);
-                case GameColor.Tan: return new Color32(0xF2, 0xB8, 0xA0, 0xFF);
-                case GameColor.Pink: return new Color32(0xF5, 0x3D, 0xC8, 0xFF);
-                case GameColor.Yellow: return new Color32(0xFF, 0xD6, 0x1F, 0xFF);
+                case GameColor.Brown: return new Color32(0x8A, 0x52, 0x2E, 0xFF);
+                case GameColor.Tan: return new Color32(0xFF, 0xB0, 0xA0, 0xFF);
+                case GameColor.Pink: return new Color32(0xF0, 0x3C, 0xD2, 0xFF);
+                case GameColor.Yellow: return new Color32(0xFF, 0xD8, 0x1F, 0xFF);
                 case GameColor.Red: return new Color32(0xE8, 0x2A, 0x3A, 0xFF);
-                case GameColor.Cream: return new Color32(0xFF, 0xEC, 0xC2, 0xFF);
+                case GameColor.Cream: return new Color32(0x6C, 0xD6, 0x6B, 0xFF);
                 default: return Color.magenta;
             }
         }

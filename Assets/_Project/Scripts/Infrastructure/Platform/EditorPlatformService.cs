@@ -26,8 +26,7 @@ namespace SheepStrike.Infrastructure.Platform
         public void ReportLevelResult(int level, bool won, float secondsUsed) =>
             Debug.Log($"[Platform] Level {level} {(won ? "won" : "lost")} in {secondsUsed:0.0}s");
 
-        public void ShowLeaderboard(int highestLevel) =>
-            Debug.Log($"[Platform] Leaderboard requested (highest level {highestLevel}); only the mini-game hosts provide one.");
+        public bool TryShowLeaderboard(int highestLevel) => false;
 
         public void AddToDesktop(Action<bool> onFinished)
         {

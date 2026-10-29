@@ -18,6 +18,7 @@ namespace SheepStrike.Presentation.Presenters
             public HomeView Home;
             public SettingsPanelView Settings;
             public CollectionPanelView Collection;
+            public LeaderboardPanelView Leaderboard;
             public HudView Hud;
             public SoundBoard Sound;
         }
@@ -65,7 +66,13 @@ namespace SheepStrike.Presentation.Presenters
             home.StartTapped = Voiced(StartFromHome);
             home.SettingsTapped = Voiced(() => OpenSettings(inGame: false));
             home.CollectionTapped = Voiced(OpenCollection);
-            home.LeaderboardTapped = Voiced(() => _platform.ShowLeaderboard(_collection.CurrentLevel));
+            home.LeaderboardTapped = Voiced(OpenLeaderboard);
+            _views.Leaderboard.CloseTapped = Voiced(_views.Leaderboard.Hide);
+            _views.Leaderboard.TabTapped = friends =>
+            {
+                _views.Sound.Tap();
+                RenderLeaderboard(friends);
+            };
             home.AddToDesktopTapped = Voiced(() => _platform.AddToDesktop(added =>
             {
                 if (!added) _views.Hud.Toast(Texts.DesktopUnavailable);
@@ -153,10 +160,29 @@ namespace SheepStrike.Presentation.Presenters
             _views.Collection.Hide();
         }
 
+        /// <summary>The host's own ranking when there is one; otherwise our panel with the player's own record.</summary>
+        private void OpenLeaderboard()
+        {
+            if (_platform.TryShowLeaderboard(_collection.CurrentLevel)) return;
+            RenderLeaderboard(friends: true);
+            _views.Leaderboard.Show();
+        }
+
+        /// <summary>
+        /// Offline there is no ranking service, so both tabs list only the player; nothing is made up.
+        /// The note tells them where the real ranking appears.
+        /// </summary>
+        private void RenderLeaderboard(bool friends)
+        {
+            var rows = new[] { new LeaderboardRow(1, Texts.MyBest, _collection.UnlockedCount, true) };
+            _views.Leaderboard.Render(friends, rows, Texts.LeaderboardOffline);
+        }
+
         private void CloseDialogs()
         {
             _views.Settings.Hide();
             _views.Collection.Hide();
+            _views.Leaderboard.Hide();
         }
 
         private void ApplyAllSettings()

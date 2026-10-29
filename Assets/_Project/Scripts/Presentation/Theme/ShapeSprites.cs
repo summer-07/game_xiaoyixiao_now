@@ -20,6 +20,20 @@ namespace SheepStrike.Presentation.Theme
         private const float GearBody = 0.34f;
         private const float GearToothLength = 0.12f;
         private const float GearHole = 0.13f;
+        private const int SheepSize = 256;
+        private const float SheepRim = 0.07f;
+        private const float SheepRimShade = 0.5f;
+
+        /// <summary>The sheep token as circles in a -1..1 box: (x, y, radius). Woolly top, round body, ears, a curl of tail.</summary>
+        private static readonly Vector3[] SheepBlobs =
+        {
+            new Vector3(0f, -0.02f, 0.62f),
+            new Vector3(-0.42f, 0.36f, 0.3f), new Vector3(0f, 0.48f, 0.32f), new Vector3(0.42f, 0.36f, 0.3f),
+            new Vector3(-0.58f, 0.02f, 0.28f), new Vector3(0.58f, 0.02f, 0.28f),
+            new Vector3(-0.34f, -0.44f, 0.3f), new Vector3(0.34f, -0.44f, 0.3f),
+            new Vector3(-0.74f, 0.42f, 0.13f), new Vector3(0.74f, 0.42f, 0.13f),
+            new Vector3(0.5f, -0.74f, 0.13f)
+        };
 
         public static Sprite BevelBox() => CreateBox(true);
 
@@ -28,6 +42,43 @@ namespace SheepStrike.Presentation.Theme
         public static Sprite Disc() => CreateRound(0f);
 
         public static Sprite Ring() => CreateRound(1f - RingThickness * 2f);
+
+        /// <summary>
+        /// Flat, chunky sheep token tinted per colour at runtime, like the reference's sheep. The body is near-white
+        /// with a soft top highlight; a built-in rim at half brightness becomes a darker outline of the same hue,
+        /// so every colour reads clearly even on the purple background.
+        /// </summary>
+        public static Sprite SheepToken()
+        {
+            var texture = NewTexture(SheepSize);
+            for (int y = 0; y < SheepSize; y++)
+            {
+                for (int x = 0; x < SheepSize; x++)
+                {
+                    float px = (x + 0.5f) / SheepSize * 2f - 1f, py = (y + 0.5f) / SheepSize * 2f - 1f;
+                    float inside = SheepCoverage(px, py);
+                    float alpha = Mathf.Clamp01(inside * SheepSize * 0.5f + 0.5f);
+                    float rim = Mathf.Clamp01((SheepRim - inside) * SheepSize * 0.5f);
+                    float body = Mathf.Lerp(0.86f, 1f, (py + 1f) * 0.5f);
+                    float shade = Mathf.Lerp(body, SheepRimShade, rim);
+                    texture.SetPixel(x, y, new Color(shade, shade, shade, alpha));
+                }
+            }
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0, 0, SheepSize, SheepSize), new Vector2(0.5f, 0.5f));
+        }
+
+        /// <summary>How far inside the nearest blob a point is (negative outside).</summary>
+        private static float SheepCoverage(float x, float y)
+        {
+            float best = float.MinValue;
+            foreach (var blob in SheepBlobs)
+            {
+                float distance = Mathf.Sqrt((x - blob.x) * (x - blob.x) + (y - blob.y) * (y - blob.y));
+                best = Mathf.Max(best, blob.z - distance);
+            }
+            return best * 0.92f;
+        }
 
         /// <summary>A cog for the settings button: a disc with square-ish teeth and a hole.</summary>
         public static Sprite Gear()

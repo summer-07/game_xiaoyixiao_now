@@ -97,6 +97,7 @@ namespace SheepStrike.Bootstrap
                     level => menu.OnCollectionReplay(level),
                     page => menu.OnCollectionPageRequested(page),
                     () => menu.OnCollectionClosed()),
+                Leaderboard = new LeaderboardPanelView(root, art),
                 Hud = hud,
                 Sound = sound
             };

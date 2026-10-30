@@ -4,24 +4,30 @@ using UnityEngine.EventSystems;
 namespace SheepStrike.Presentation.Views
 {
     /// <summary>
-    /// Drag sideways anywhere outside the UI to spin the animal; it drifts slowly when idle.
-    /// Vertical drags are ignored: the animal stays upright and never tilts up or down.
+    /// Drag sideways anywhere outside the UI to turn the animal: it turns exactly as far as the finger moves and
+    /// stops the moment the finger stops or lifts, with no momentum. Vertical drags are ignored so it stays upright.
+    /// After a few seconds untouched it starts drifting slowly so the far side comes round.
     /// </summary>
     public sealed class ModelRotator : MonoBehaviour
     {
         private const float DegreesPerPixel = 0.35f;
-        private const float IdleSpinSpeed = 8f;
+        private const float IdleDelaySeconds = 3f;
+        private const float IdleSpinSpeed = 6f;
+        private const float IdleEaseInPerSecond = 0.5f;
 
         private Transform _target;
         private Vector3 _lastPointer;
         private bool _dragging;
         private float _yaw;
-        private float _yawVelocity;
+        private float _idleSeconds;
+        private float _idleBlend;
 
         public void Bind(Transform target)
         {
             _target = target;
             _yaw = target.localEulerAngles.y;
+            _idleSeconds = 0f;
+            _idleBlend = 0f;
         }
 
         private void Update()
@@ -35,19 +41,27 @@ namespace SheepStrike.Presentation.Views
             }
             if (Input.GetMouseButtonUp(0)) _dragging = false;
 
-            if (_dragging)
-            {
-                var delta = Input.mousePosition - _lastPointer;
-                _lastPointer = Input.mousePosition;
-                _yawVelocity = -delta.x * DegreesPerPixel / Mathf.Max(Time.deltaTime, 0.001f);
-            }
-            else
-            {
-                _yawVelocity = Mathf.Lerp(_yawVelocity, IdleSpinSpeed, Time.deltaTime * 2f);
-            }
+            if (_dragging) FollowFinger();
+            else Drift();
 
-            _yaw += _yawVelocity * Time.deltaTime;
             _target.localRotation = Quaternion.Euler(0f, _yaw, 0f);
+        }
+
+        private void FollowFinger()
+        {
+            var delta = Input.mousePosition - _lastPointer;
+            _lastPointer = Input.mousePosition;
+            _yaw -= delta.x * DegreesPerPixel;
+            _idleSeconds = 0f;
+            _idleBlend = 0f;
+        }
+
+        private void Drift()
+        {
+            _idleSeconds += Time.deltaTime;
+            if (_idleSeconds < IdleDelaySeconds) return;
+            _idleBlend = Mathf.Min(1f, _idleBlend + IdleEaseInPerSecond * Time.deltaTime);
+            _yaw += IdleSpinSpeed * _idleBlend * Time.deltaTime;
         }
 
         private static bool IsPointerOverUi()
